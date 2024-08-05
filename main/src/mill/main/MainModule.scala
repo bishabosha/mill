@@ -436,7 +436,7 @@ trait MainModule extends BaseModule0 {
           for {
             workerSegments <- evaluator.workerCache.keys.toList
             if allSegments.exists(workerSegments.startsWith)
-            (_, Val(closeable: AutoCloseable)) <-
+            case (_, Val(closeable: AutoCloseable)) <-
               evaluator.mutableWorkerCache.remove(workerSegments)
           } {
             closeable.close()
@@ -479,7 +479,7 @@ trait MainModule extends BaseModule0 {
    */
   def shutdown(): Command[Unit] = Task.Command(exclusive = true) {
     Target.log.info("Shutting down Mill server...")
-    Target.ctx.systemExit(0)
+    Target.ctx().systemExit(0)
     ()
   }
 
