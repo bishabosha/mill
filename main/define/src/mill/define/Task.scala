@@ -199,13 +199,13 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * return value to disk, only re-computing if upstream [[Task]]s change
    */
   implicit def apply[T](t: T)(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
-    macro Internal.targetImpl[T]
+    ??? // macro Internal.targetImpl[T]
 
   implicit def apply[T](t: Result[T])(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
-    macro Internal.targetResultImpl[T]
+    ??? // macro Internal.targetResultImpl[T]
 
   def apply[T](t: Task[T])(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
-    macro Internal.targetTaskImpl[T]
+    ??? // macro Internal.targetTaskImpl[T]
 
   /**
    * [[PersistentImpl]] are a flavor of [[TargetImpl]], normally defined using
@@ -221,7 +221,7 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * Violating that invariant can result in confusing mis-behaviors
    */
   def persistent[T](t: Result[T])(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
-    macro Internal.persistentImpl[T]
+    ??? // macro Internal.persistentImpl[T]
 
   /**
    * A specialization of [[InputImpl]] defined via `T.sources`, [[SourcesImpl]]
@@ -234,20 +234,20 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * [[TargetImpl]]s need to be invalidated and re-computed.
    */
   def sources(values: Result[os.Path]*)(implicit ctx: mill.define.Ctx): Target[Seq[PathRef]] =
-    macro Internal.sourcesImpl1
+    ??? // macro Internal.sourcesImpl1
 
   def sources(values: Result[Seq[PathRef]])(implicit ctx: mill.define.Ctx): Target[Seq[PathRef]] =
-    macro Internal.sourcesImpl2
+    ??? // macro Internal.sourcesImpl2
 
   /**
    * Similar to [[Source]], but only for a single source file or folder. Defined
    * using `T.source`.
    */
   def source(value: Result[os.Path])(implicit ctx: mill.define.Ctx): Target[PathRef] =
-    macro Internal.sourceImpl1
+    ??? // macro Internal.sourceImpl1
 
   def source(value: Result[PathRef])(implicit ctx: mill.define.Ctx): Target[PathRef] =
-    macro Internal.sourceImpl2
+    ??? // macro Internal.sourceImpl2
 
   /**
    * [[InputImpl]]s, normally defined using `T.input`, are [[NamedTask]]s that
@@ -269,7 +269,7 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
       w: upickle.default.Writer[T],
       ctx: mill.define.Ctx
   ): Target[T] =
-    macro Internal.inputImpl[T]
+    ??? // macro Internal.inputImpl[T]
 
   /**
    * [[Command]]s are only [[NamedTask]]s defined using
@@ -282,13 +282,13 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
       ctx: mill.define.Ctx,
       w: W[T],
       cls: EnclosingClass
-  ): Command[T] = macro Internal.commandFromTask[T]
+  ): Command[T] = ??? // macro Internal.commandFromTask[T]
 
   def command[T](t: Result[T])(implicit
       w: W[T],
       ctx: mill.define.Ctx,
       cls: EnclosingClass
-  ): Command[T] = macro Internal.commandImpl[T]
+  ): Command[T] = ??? // macro Internal.commandImpl[T]
 
   /**
    * [[Worker]] is a [[NamedTask]] that lives entirely in-memory, defined using
@@ -305,10 +305,10 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * what in-memory state the worker may have.
    */
   def worker[T](t: Task[T])(implicit ctx: mill.define.Ctx): Worker[T] =
-    macro Internal.workerImpl1[T]
+    ??? // macro Internal.workerImpl1[T]
 
   def worker[T](t: Result[T])(implicit ctx: mill.define.Ctx): Worker[T] =
-    macro Internal.workerImpl2[T]
+    ??? // macro Internal.workerImpl2[T]
 
   /**
    * Creates an anonymous `Task`. These depend on other tasks and
@@ -316,7 +316,7 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * command line and do not perform any caching. Typically used as helpers to
    * implement `T{...}` targets.
    */
-  def task[T](t: Result[T]): Task[T] = macro Applicative.impl[Task, T, mill.api.Ctx]
+  def task[T](t: Result[T]): Task[T] = ??? // macro Applicative.impl[Task, T, mill.api.Ctx]
 
   /**
    * Converts a `Seq[Task[T]]` into a `Task[Seq[T]]`

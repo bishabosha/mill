@@ -61,6 +61,20 @@ object JarManifest {
       groups: Map[String, Map[String, String]] = Map.empty
   ): JarManifest = new JarManifest(main, groups)
 
+  private given JarManifestMirror: scala.deriving.Mirror.Product with {
+
+    final type MirroredMonoType = JarManifest
+    final type MirroredType = JarManifest
+    final type MirroredElemTypes = (Map[String, String], Map[String, Map[String, String]])
+    final type MirroredElemLabels = ("main", "groups")
+
+    def fromProduct(p: scala.Product): JarManifest = {
+      val main = p.productElement(0).asInstanceOf[Map[String, String]]
+      val groups = p.productElement(1).asInstanceOf[Map[String, Map[String, String]]]
+      new JarManifest(main, groups)
+    }
+  }
+
   implicit val jarManifestRW: ReadWriter[JarManifest] = upickle.default.macroRW
 
 }

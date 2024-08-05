@@ -256,7 +256,10 @@ trait CoursierSupport {
 
     val resolution =
       retry(ctx = ctx, errorMsgExtractor = (r: Resolution) => r.errors.flatMap(_._2)) {
-        () => start.process.run(fetch).unsafeRun()
+        () => {
+          val ext = new coursier.ResolutionExtensions(start) // error without explicit conversion
+          ext.process.run(fetch).unsafeRun()
+        }
       }
 
     (deps.iterator.to(Seq), resolution)

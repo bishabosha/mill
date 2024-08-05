@@ -119,7 +119,7 @@ object Deps {
   val asmTree = ivy"org.ow2.asm:asm-tree:9.7"
   val bloopConfig = ivy"ch.epfl.scala::bloop-config:1.5.5"
 
-  val coursier = ivy"io.get-coursier::coursier:2.1.10"
+  val coursier = ivy"io.get-coursier::coursier:2.1.10".withDottyCompat(scalaVersion)
   val coursierInterface = ivy"io.get-coursier:interface:1.0.19"
 
   val cask = ivy"com.lihaoyi::cask:0.9.4"
@@ -185,7 +185,7 @@ object Deps {
   // keep in sync with doc/antora/antory.yml
   val bsp4j = ivy"ch.epfl.scala:bsp4j:2.2.0-M2"
   val fansi = ivy"com.lihaoyi::fansi:0.5.0"
-  val jarjarabrams = ivy"com.eed3si9n.jarjarabrams::jarjar-abrams-core:1.14.0"
+  val jarjarabrams = ivy"com.eed3si9n.jarjarabrams::jarjar-abrams-core:1.14.0".withDottyCompat(scalaVersion)
   val requests = ivy"com.lihaoyi::requests:0.9.0"
   val logback = ivy"ch.qos.logback:logback-classic:1.5.7"
   val sonatypeCentralClient = ivy"com.lumidion::sonatype-central-client-requests:0.3.0"
