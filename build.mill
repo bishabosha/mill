@@ -52,7 +52,7 @@ object Deps {
   // The Scala version to use
   // When updating, run "Publish Bridges" Github Actions for the new version
   // and then add to it `bridgeScalaVersions`
-  val scalaVersion = "2.13.14"
+  val scalaVersion = "3.5.0-RC6"
   // Scoverage 1.x will not get releases for newer Scala versions
   val scalaVersionForScoverageWorker1 = "2.13.8"
   // The Scala 2.12.x version to use for some workers
@@ -385,15 +385,17 @@ trait MillScalaModule extends ScalaModule with MillJavaModule with ScalafixModul
   def scalacOptions =
     super.scalacOptions() ++ Seq(
       "-deprecation",
-      "-P:acyclic:force",
       "-feature",
       "-Xlint:unused",
       "-Xlint:adapted-args"
+    ) ++ (
+      if (scalaVersion().startsWith("3.")) Seq.empty
+      else Seq("-P:acyclic:force")
     )
 
   def scalacPluginIvyDeps =
     super.scalacPluginIvyDeps() ++
-      Agg(Deps.acyclic) ++
+      Agg.when(!scalaVersion().startsWith("3."))(Deps.acyclic) ++
       Agg.when(scalaVersion().startsWith("2.13."))(Deps.millModuledefsPlugin)
 
   def mandatoryIvyDeps =
@@ -551,7 +553,9 @@ trait BridgeModule extends MillPublishJavaModule with CrossScalaModule {
   def ivyDeps = Agg(
     ivy"org.scala-sbt:compiler-interface:${Deps.zinc.version}",
     ivy"org.scala-sbt:util-interface:${Deps.zinc.version}",
-    ivy"org.scala-lang:scala-compiler:${crossScalaVersion}"
+  ) ++ Agg(
+    if (crossScalaVersion.startsWith("3.")) ivy"org.scala-lang::scala3-compiler:${crossScalaVersion}"
+    else ivy"org.scala-lang:scala-compiler:${crossScalaVersion}"
   )
 
   def resources = T.sources {
@@ -560,7 +564,8 @@ trait BridgeModule extends MillPublishJavaModule with CrossScalaModule {
   }
 
   def compilerBridgeIvyDeps: T[Agg[Dep]] = Agg(
-    ivy"org.scala-sbt::compiler-bridge:${Deps.zinc.version}".exclude("*" -> "*")
+    (if (crossScalaVersion.startsWith("3.")) ivy"org.scala-lang:scala3-sbt-bridge:${crossScalaVersion}"
+    else ivy"org.scala-sbt::compiler-bridge:${Deps.zinc.version}").exclude("*" -> "*")
   )
 
   def compilerBridgeSourceJars: T[Agg[PathRef]] = T {
