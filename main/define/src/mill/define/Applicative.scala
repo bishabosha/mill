@@ -44,67 +44,68 @@ object Applicative {
     ???
   }
   def impl0[M[_], T: c.WeakTypeTag, Ctx: c.WeakTypeTag](c: Context)(t: c.Tree): c.Expr[M[T]] = {
-    import c.universe._
-    def rec(t: Tree): Iterator[c.Tree] = Iterator(t) ++ t.children.flatMap(rec(_))
+    ???
+    // import c.universe._
+    // def rec(t: Tree): Iterator[c.Tree] = Iterator(t) ++ t.children.flatMap(rec(_))
 
-    val exprs = collection.mutable.Buffer.empty[c.Tree]
-    val targetApplySym = typeOf[Applyable[Nothing, _]].member(TermName("apply"))
+    // val exprs = collection.mutable.Buffer.empty[c.Tree]
+    // val targetApplySym = typeOf[Applyable[Nothing, _]].member(TermName("apply"))
 
-    val itemsName = c.freshName(TermName("items"))
-    val itemsSym = c.internal.newTermSymbol(c.internal.enclosingOwner, itemsName)
-    c.internal.setFlag(itemsSym, (1L << 44).asInstanceOf[c.universe.FlagSet])
-    c.internal.setInfo(itemsSym, typeOf[Seq[Any]])
-    // Derived from @olafurpg's
-    // https://gist.github.com/olafurpg/596d62f87bf3360a29488b725fbc7608
-    val defs = rec(t).filter(_.isDef).map(_.symbol).toSet
+    // val itemsName = c.freshName(TermName("items"))
+    // val itemsSym = c.internal.newTermSymbol(c.internal.enclosingOwner, itemsName)
+    // c.internal.setFlag(itemsSym, (1L << 44).asInstanceOf[c.universe.FlagSet])
+    // c.internal.setInfo(itemsSym, typeOf[Seq[Any]])
+    // // Derived from @olafurpg's
+    // // https://gist.github.com/olafurpg/596d62f87bf3360a29488b725fbc7608
+    // val defs = rec(t).filter(_.isDef).map(_.symbol).toSet
 
-    val ctxName = TermName(c.freshName("ctx"))
-    val ctxSym = c.internal.newTermSymbol(c.internal.enclosingOwner, ctxName)
-    c.internal.setInfo(ctxSym, weakTypeOf[Ctx])
+    // val ctxName = TermName(c.freshName("ctx"))
+    // val ctxSym = c.internal.newTermSymbol(c.internal.enclosingOwner, ctxName)
+    // c.internal.setInfo(ctxSym, weakTypeOf[Ctx])
 
-    val transformed = c.internal.typingTransform(t) {
-      case (t @ q"$fun.apply()($handler)", api) if t.symbol == targetApplySym =>
-        val localDefs = rec(fun).filter(_.isDef).map(_.symbol).toSet
-        val banned = rec(t).filter(x => defs(x.symbol) && !localDefs(x.symbol))
+    // val transformed = c.internal.typingTransform(t) {
+    //   case (t @ q"$fun.apply()($handler)", api) if t.symbol == targetApplySym =>
+    //     val localDefs = rec(fun).filter(_.isDef).map(_.symbol).toSet
+    //     val banned = rec(t).filter(x => defs(x.symbol) && !localDefs(x.symbol))
 
-        if (banned.hasNext) {
-          val banned0 = banned.next()
-          c.abort(
-            banned0.pos,
-            "Target#apply() call cannot use `" + banned0.symbol + "` defined within the T{...} block"
-          )
-        }
-        val tempName = c.freshName(TermName("tmp"))
-        val tempSym = c.internal.newTermSymbol(c.internal.enclosingOwner, tempName)
-        c.internal.setInfo(tempSym, t.tpe)
-        val tempIdent = Ident(tempSym)
-        c.internal.setType(tempIdent, t.tpe)
-        c.internal.setFlag(tempSym, (1L << 44).asInstanceOf[c.universe.FlagSet])
-        val itemsIdent = Ident(itemsSym)
-        exprs.append(q"$fun")
-        c.typecheck(q"$itemsIdent(${exprs.size - 1}).asInstanceOf[${t.tpe}]")
-      case (t, api)
-          if t.symbol != null
-            && t.symbol.annotations.exists(_.tree.tpe =:= typeOf[mill.api.Ctx.ImplicitStub]) =>
-        val tempIdent = Ident(ctxSym)
-        c.internal.setType(tempIdent, t.tpe)
-        c.internal.setFlag(ctxSym, (1L << 44).asInstanceOf[c.universe.FlagSet])
-        tempIdent
+    //     if (banned.hasNext) {
+    //       val banned0 = banned.next()
+    //       c.abort(
+    //         banned0.pos,
+    //         "Target#apply() call cannot use `" + banned0.symbol + "` defined within the T{...} block"
+    //       )
+    //     }
+    //     val tempName = c.freshName(TermName("tmp"))
+    //     val tempSym = c.internal.newTermSymbol(c.internal.enclosingOwner, tempName)
+    //     c.internal.setInfo(tempSym, t.tpe)
+    //     val tempIdent = Ident(tempSym)
+    //     c.internal.setType(tempIdent, t.tpe)
+    //     c.internal.setFlag(tempSym, (1L << 44).asInstanceOf[c.universe.FlagSet])
+    //     val itemsIdent = Ident(itemsSym)
+    //     exprs.append(q"$fun")
+    //     c.typecheck(q"$itemsIdent(${exprs.size - 1}).asInstanceOf[${t.tpe}]")
+    //   case (t, api)
+    //       if t.symbol != null
+    //         && t.symbol.annotations.exists(_.tree.tpe =:= typeOf[mill.api.Ctx.ImplicitStub]) =>
+    //     val tempIdent = Ident(ctxSym)
+    //     c.internal.setType(tempIdent, t.tpe)
+    //     c.internal.setFlag(ctxSym, (1L << 44).asInstanceOf[c.universe.FlagSet])
+    //     tempIdent
 
-      case (t, api) => api.default(t)
-    }
+    //   case (t, api) => api.default(t)
+    // }
 
-    val ctxBinding = c.internal.valDef(ctxSym)
+    // val ctxBinding = c.internal.valDef(ctxSym)
 
-    val itemsBinding = c.internal.valDef(itemsSym)
-    val callback = c.typecheck(q"{(${itemsBinding}, ${ctxBinding}) => $transformed}")
+    // val itemsBinding = c.internal.valDef(itemsSym)
+    // val callback = c.typecheck(q"{(${itemsBinding}, ${ctxBinding}) => $transformed}")
 
-    val res =
-      q"${c.prefix}.traverseCtx[_root_.scala.Any, ${weakTypeOf[T]}](${exprs.toList}){ $callback }"
+    // val res =
+    //   q"${c.prefix}.traverseCtx[_root_.scala.Any, ${weakTypeOf[T]}](${exprs.toList}){ $callback }"
 
-    c.internal.changeOwner(transformed, c.internal.enclosingOwner, callback.symbol)
+    // c.internal.changeOwner(transformed, c.internal.enclosingOwner, callback.symbol)
 
-    c.Expr[M[T]](res)
+    // c.Expr[M[T]](res)
   }
 
 }
