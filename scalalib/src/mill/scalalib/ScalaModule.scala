@@ -62,7 +62,7 @@ trait ScalaModule extends JavaModule with TestModule.ScalaModuleBase { outer =>
   def scalaVersion: T[String]
 
   override def mapDependencies: Task[coursier.Dependency => coursier.Dependency] = T.task {
-    super.mapDependencies().andThen { d: coursier.Dependency =>
+    super.mapDependencies().andThen { (d: coursier.Dependency) =>
       val artifacts =
         if (ZincWorkerUtil.isDotty(scalaVersion()))
           Set("dotty-library", "dotty-compiler")
