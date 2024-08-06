@@ -3,7 +3,7 @@
 
 val cls = (
   name = "",
-  values = List("ES2015","ES2016","ES2017","ES2018","ES2019","ES2020","ES2021","ES5_1"),
+  values = List("ReloadWorkspace","Shutdown","Failure"),
   sum = false,
   hasApply = true,
   modifier = "private",
@@ -18,7 +18,7 @@ val cls = (
   )
 )
 
-val padding = 4
+val padding = 2
 
 // derived values
 
