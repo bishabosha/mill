@@ -397,7 +397,7 @@ private[mill] trait GroupEvaluator {
           .task
           .writerOpt
           .asInstanceOf[Option[upickle.default.Writer[Any]]]
-          .map { w => upickle.default.writeJs(v.value)(w) }
+          .map { w => upickle.default.writeJs(v.value)(using w) }
 
         for (json <- terminalResult) {
           os.write.over(
@@ -443,7 +443,7 @@ private[mill] trait GroupEvaluator {
         _ <- Option.when(cached.inputsHash == inputsHash)(())
         reader <- labelled.task.readWriterOpt
         parsed <-
-          try Some(upickle.default.read(cached.value)(reader))
+          try Some(upickle.default.read(cached.value)(using reader))
           catch {
             case e: PathRef.PathRefValidationException =>
               logger.debug(
