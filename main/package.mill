@@ -17,7 +17,9 @@ object `package` extends RootModule with build.MillStableScalaModule with BuildI
     build.Deps.logback
   )
 
-  def compileIvyDeps = Agg(build.Deps.scalaReflect(scalaVersion()))
+  def compileIvyDeps = T {
+    if (scalaVersion().startsWith("3.")) Agg.empty else Agg(build.Deps.scalaReflect(scalaVersion()))
+  }
 
   def buildInfoPackageName = "mill.main"
 

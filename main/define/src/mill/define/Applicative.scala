@@ -29,13 +29,13 @@ object Applicative {
   }
   trait Applyable[M[+_], +T] {
     def self: M[T]
-    def apply()(implicit handler: ApplyHandler[M]): T = handler(self)
+    inline def apply()(using inline handler: ApplyHandler[M]): T = ??? // handler(self)
   }
 
   type Id[+T] = T
 
   trait Applyer[W[_], T[_], Z[_], Ctx] {
-    def ctx()(implicit c: Ctx) = c
+    inline def ctx()(using inline c: Ctx): Ctx = ??? // c
     def traverseCtx[I, R](xs: Seq[W[I]])(f: (IndexedSeq[I], Ctx) => Z[R]): T[R]
   }
 
