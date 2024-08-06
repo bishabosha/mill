@@ -35,7 +35,7 @@ trait JavaModule
     with BspModule
     with SemanticDbJavaModule { outer =>
 
-  def zincWorker: ModuleRef[ZincWorkerModule] = super.zincWorker
+  override def zincWorker: ModuleRef[ZincWorkerModule] = super.zincWorker // TODO: remove override with mill-moduledefs
   type JavaTests = JavaModuleTests
   @deprecated("Use JavaTests instead", since = "Mill 0.11.10")
   trait JavaModuleTests extends JavaModule with TestModule {
@@ -96,9 +96,9 @@ trait JavaModule
    * If none is specified, the classpath is searched for an appropriate main
    * class to use if one exists
    */
-  def mainClass: T[Option[String]] = None
+  override def mainClass: T[Option[String]] = None // TODO: remove override with mill-moduledefs
 
-  def finalMainClassOpt: T[Either[String, String]] = T {
+  override def finalMainClassOpt: T[Either[String, String]] = T {  // TODO: remove override with mill-moduledefs
     mainClass() match {
       case Some(m) => Right(m)
       case None =>
@@ -114,7 +114,7 @@ trait JavaModule
     }
   }
 
-  def finalMainClass: T[String] = T {
+  override def finalMainClass: T[String] = T {  // TODO: remove override with mill-moduledefs
     finalMainClassOpt() match {
       case Right(main) => Result.Success(main)
       case Left(msg) => Result.Failure(msg)
@@ -132,7 +132,7 @@ trait JavaModule
    * ivy"org::name:version" for Scala dependencies or ivy"org:name:version"
    * for Java dependencies
    */
-  def ivyDeps: T[Agg[Dep]] = T { Agg.empty[Dep] }
+  override def ivyDeps: T[Agg[Dep]] = T { Agg.empty[Dep] }  // TODO: remove override with mill-moduledefs
 
   /**
    * Aggregation of mandatoryIvyDeps and ivyDeps.

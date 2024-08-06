@@ -24,18 +24,18 @@ object Applicative {
     def apply[T](t: M[T]): T
   }
   object ApplyHandler {
-    @compileTimeOnly("Target#apply() can only be used with a T{...} block")
+    // @compileTimeOnly("Target#apply() can only be used with a T{...} block")
     implicit def defaultApplyHandler[M[+_]]: ApplyHandler[M] = ???
   }
   trait Applyable[M[+_], +T] {
     def self: M[T]
-    inline def apply()(using inline handler: ApplyHandler[M]): T = ??? // handler(self)
+    def apply()(implicit handler: ApplyHandler[M]): T = handler(self)
   }
 
   type Id[+T] = T
 
   trait Applyer[W[_], T[_], Z[_], Ctx] {
-    inline def ctx()(using inline c: Ctx): Ctx = ??? // c
+    def ctx()(implicit c: Ctx): Ctx = c
     def traverseCtx[I, R](xs: Seq[W[I]])(f: (IndexedSeq[I], Ctx) => Z[R]): T[R]
   }
 

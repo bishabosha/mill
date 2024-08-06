@@ -150,7 +150,7 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * Messages logged with `log.debug` appear by default only in the log files.
    * You can use the `--debug` option when running mill to show them on the console too.
    */
-  inline def log(using inline ctx: mill.api.Ctx.Log): Logger = ??? // ctx.log
+  def log(implicit ctx: mill.api.Ctx.Log): Logger = ctx.log
 
   /**
    * Returns the implicit [[mill.api.Ctx.Home.home]] in scope.

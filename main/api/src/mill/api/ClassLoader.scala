@@ -21,9 +21,9 @@ object ClassLoader {
       sharedLoader: java.lang.ClassLoader = getClass.getClassLoader,
       sharedPrefixes: Seq[String] = Seq(),
       logger: Option[mill.api.Logger] = None
-  )/*(implicit ctx: Ctx.Home)*/: URLClassLoader = {
+  )(implicit ctx: Ctx.Home): URLClassLoader = {
     new URLClassLoader(
-      ??? : Array[URL], // makeUrls(urls).toArray,
+      makeUrls(urls).toArray,
       refinePlatformParent(parent)
     ) {
       override def findClass(name: String): Class[_] = {
