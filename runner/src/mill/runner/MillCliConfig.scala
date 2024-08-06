@@ -4,6 +4,7 @@ import mainargs.{Flag, Leftover, arg}
 import mill.api.WorkspaceRoot
 import os.Path
 
+@mainargs.main // TODO remove this annotation when we fix https://github.com/com-lihaoyi/mainargs/issues/143
 class MillCliConfig private (
     @arg(
       short = 'h',
@@ -165,7 +166,7 @@ object MillCliConfig {
    * hence we need both in sync.
    */
   def apply(
-      home: os.Path = mill.api.Ctx.defaultHome,
+      home: os.Path = (mill.api.Ctx.defaultHome: os.Path),
       @deprecated("No longer supported.", "Mill 0.11.0-M8")
       repl: Flag = Flag(),
       noServer: Flag = Flag(),
@@ -173,20 +174,20 @@ object MillCliConfig {
       showVersion: Flag = Flag(),
       ringBell: Flag = Flag(),
       disableTicker: Flag = Flag(),
-      enableTicker: Option[Boolean] = None,
+      enableTicker: Option[Boolean] = Option.empty[Boolean], // TODO: mainargs crashes when type of expression doesnt match the formal parameter type
       debugLog: Flag = Flag(),
       keepGoing: Flag = Flag(),
-      extraSystemProperties: Map[String, String] = Map(),
-      threadCountRaw: Option[Int] = None,
-      imports: Seq[String] = Seq(),
+      extraSystemProperties: Map[String, String] = Map[String, String](), // TODO: mainargs crashes when type of expression doesnt match the formal parameter type
+      threadCountRaw: Option[Int] = Option.empty[Int], // TODO: mainargs crashes when type of expression doesnt match the formal parameter type
+      imports: Seq[String] = Seq[String](), // TODO: mainargs crashes when type of expression doesnt match the formal parameter type
       interactive: Flag = Flag(),
       help: Flag = Flag(),
       watch: Flag = Flag(),
       silent: Flag = Flag(),
-      leftoverArgs: Leftover[String] = Leftover(),
-      color: Option[Boolean] = None,
+      leftoverArgs: Leftover[String] = Leftover[String](), // TODO: mainargs crashes when type of expression doesnt match the formal parameter type
+      color: Option[Boolean] = Option.empty[Boolean], // TODO: mainargs crashes when type of expression doesnt match the formal parameter type
       disableCallgraphInvalidation: Flag = Flag(),
-      metaLevel: Option[Int] = None,
+      metaLevel: Option[Int] = Option.empty[Int], // TODO: mainargs crashes when type of expression doesnt match the formal parameter type
       allowPositionalCommandArgs: Flag = Flag()
   ): MillCliConfig = new MillCliConfig(
     home = home,
@@ -327,7 +328,8 @@ object MillCliConfigParser {
   }
 
   private[this] lazy val parser: ParserForClass[MillCliConfig] =
-    mainargs.ParserForClass[MillCliConfig]
+    ???
+    // mainargs.ParserForClass[MillCliConfig] // TODO: mainargs is crashing if we use this, so fake it for now
 
   lazy val usageText: String =
     parser.helpText(customName = customName, customDoc = customDoc)

@@ -363,7 +363,8 @@ trait JavaModule
    * The folders where the resource files for this module live.
    * If you need resources to be seen by the compiler, use [[compileResources]].
    */
-  def resources: T[Seq[PathRef]] = T.sources { millSourcePath / "resources" }
+  // TODO: remove override when mill-moduledefs is ported to scala 3
+  override def resources: T[Seq[PathRef]] = T.sources { millSourcePath / "resources" }
 
   /**
    * The folders where the compile time resource files for this module live.

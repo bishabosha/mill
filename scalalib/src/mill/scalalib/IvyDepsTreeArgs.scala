@@ -12,7 +12,7 @@ import mainargs.arg
  * @param whatDependsOn possible list of modules (org:artifact) to target in the tree in order to see
  *                      where a dependency stems from.
  */
-@mainargs.main
+@mainargs.main // TODO remove this annotation when we fix https://github.com/com-lihaoyi/mainargs/issues/143
 class IvyDepsTreeArgs private (
     @arg(
       doc =

@@ -224,8 +224,8 @@ class MillBuildRootModule()(implicit
     )
   }
 
-  override def bindDependency: Task[Dep => BoundDep] = T.task { dep: Dep =>
-    super.bindDependency().apply(dep).exclude(resolveDepsExclusions(): _*)
+  override def bindDependency: Task[Dep => BoundDep] = T.task { (dep: Dep) =>
+    super.bindDependency.apply().apply(dep).exclude(resolveDepsExclusions(): _*)
   }
 
   override def unmanagedClasspath: T[Agg[PathRef]] = T {
