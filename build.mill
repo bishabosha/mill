@@ -731,7 +731,7 @@ object dist0 extends MillPublishJavaModule {
 
   def testTransitiveDeps = build.runner.testTransitiveDeps() ++ Seq(
     build.main.graphviz.testDep(),
-    build.runner.linenumbers.testDep(),
+    // build.runner.linenumbers.testDep(),
     build.scalalib.backgroundwrapper.testDep(),
     build.contrib.bloop.testDep(),
     build.contrib.buildinfo.testDep(),
