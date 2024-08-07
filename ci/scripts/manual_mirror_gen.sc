@@ -2,17 +2,14 @@
 //> using options -language:experimental.namedTuples
 
 val cls = (
-  name = "",
-  values = List("ReloadWorkspace","Shutdown","Failure"),
+  name = "JarManifest",
+  values = List(),
   sum = false,
   hasApply = true,
   modifier = "private",
   ctor = List(
-    "NodeJs" -> "NodeJs",
-    "JsDom" -> "JsDom",
-    "ExoegoJsDomNodeJs" -> "ExoegoJsDomNodeJs",
-    "Phantom" -> "Phantom",
-    "Selenium" -> "Selenium",
+    "main" -> "Map[String, String]",
+    "groups" -> "Map[String, Map[String, String]]",
     // "headless" -> "Boolean"
     // "dest" -> "mill.PathRef",
   )
