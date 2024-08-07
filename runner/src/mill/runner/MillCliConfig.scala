@@ -4,7 +4,6 @@ import mainargs.{Flag, Leftover, arg}
 import mill.api.WorkspaceRoot
 import os.Path
 
-@mainargs.main // TODO remove this annotation when we fix https://github.com/com-lihaoyi/mainargs/issues/143
 class MillCliConfig private (
     @arg(
       short = 'h',
@@ -174,20 +173,20 @@ object MillCliConfig {
       showVersion: Flag = Flag(),
       ringBell: Flag = Flag(),
       disableTicker: Flag = Flag(),
-      enableTicker: Option[Boolean] = Option.empty[Boolean], // TODO: mainargs crashes when type of expression doesnt match the formal parameter type
+      enableTicker: Option[Boolean] = None,
       debugLog: Flag = Flag(),
       keepGoing: Flag = Flag(),
-      extraSystemProperties: Map[String, String] = Map[String, String](), // TODO: mainargs crashes when type of expression doesnt match the formal parameter type
-      threadCountRaw: Option[Int] = Option.empty[Int], // TODO: mainargs crashes when type of expression doesnt match the formal parameter type
-      imports: Seq[String] = Seq[String](), // TODO: mainargs crashes when type of expression doesnt match the formal parameter type
+      extraSystemProperties: Map[String, String] = Map(),
+      threadCountRaw: Option[Int] = None,
+      imports: Seq[String] = Seq(),
       interactive: Flag = Flag(),
       help: Flag = Flag(),
       watch: Flag = Flag(),
       silent: Flag = Flag(),
-      leftoverArgs: Leftover[String] = Leftover[String](), // TODO: mainargs crashes when type of expression doesnt match the formal parameter type
-      color: Option[Boolean] = Option.empty[Boolean], // TODO: mainargs crashes when type of expression doesnt match the formal parameter type
+      leftoverArgs: Leftover[String] = Leftover(),
+      color: Option[Boolean] = None,
       disableCallgraphInvalidation: Flag = Flag(),
-      metaLevel: Option[Int] = Option.empty[Int], // TODO: mainargs crashes when type of expression doesnt match the formal parameter type
+      metaLevel: Option[Int] = None,
       allowPositionalCommandArgs: Flag = Flag()
   ): MillCliConfig = new MillCliConfig(
     home = home,
@@ -328,8 +327,7 @@ object MillCliConfigParser {
   }
 
   private[this] lazy val parser: ParserForClass[MillCliConfig] =
-    ???
-    // mainargs.ParserForClass[MillCliConfig] // TODO: mainargs is crashing if we use this, so fake it for now
+    mainargs.ParserForClass[MillCliConfig]
 
   lazy val usageText: String =
     parser.helpText(customName = customName, customDoc = customDoc)
