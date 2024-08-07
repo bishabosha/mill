@@ -68,6 +68,7 @@ object RootModule {
         Caller(null)
       ) with mill.main.MainModule {
 
+    import mill.main.TokenReaders.given // now needed because Define.apply can't access this import.
     override implicit lazy val millDiscover: Discover[this.type] = Discover[this.type]
   }
 }
