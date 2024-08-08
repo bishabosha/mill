@@ -3,8 +3,6 @@ package mill.define
 import language.experimental.macros
 import scala.collection.mutable
 import scala.reflect.macros.blackbox
-import scala.collection.SeqView
-import scala.collection.View
 
 /**
  * Macro to walk the module tree and generate `mainargs` entrypoints for any
@@ -186,12 +184,8 @@ object Discover {
           // import mill.main.TokenReaders.*
           Discover.apply2(Map(${Varargs(mapping)}*))
         }
-      if TypeRepr.of[T].classSymbol.get.name == "BootstrapModule" then
-        report.error(s"generated maindata for ${TypeRepr.of[T].show}:\n${expr.asTerm.show}", TypeRepr.of[T].typeSymbol.pos.getOrElse(Position.ofMacroExpansion))
-        '{???}
-      else
-        report.warning(s"generated maindata for ${TypeRepr.of[T].show}:\n${expr.asTerm.show}", TypeRepr.of[T].typeSymbol.pos.getOrElse(Position.ofMacroExpansion))
-        expr
+      report.warning(s"generated maindata for ${TypeRepr.of[T].show}:\n${expr.asTerm.show}", TypeRepr.of[T].typeSymbol.pos.getOrElse(Position.ofMacroExpansion))
+      expr
     }
   }
 }
