@@ -107,6 +107,7 @@ class MillBuildBootstrap(
         if (parsedScriptFiles.millImport) evaluateRec(depth + 1)
         else {
           val bootstrapModule =
+            import mill.main.TokenReaders.given
             new MillBuildRootModule.BootstrapModule(
               projectRoot,
               recRoot(projectRoot, depth),
@@ -114,7 +115,8 @@ class MillBuildBootstrap(
             )(
               mill.main.RootModule.Info(
                 recRoot(projectRoot, depth),
-                Discover[MillBuildRootModule.BootstrapModule]
+                ???
+                //Discover[MillBuildRootModule.BootstrapModule] // TODO: missing outer accessor (maybe default value is incorrectly typed?)
               )
             )
           RunnerState(Some(bootstrapModule), Nil, None)

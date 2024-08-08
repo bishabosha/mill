@@ -442,5 +442,6 @@ class BloopImpl(evs: () => Seq[Evaluator], wd: os.Path) extends ExternalModule {
     }
   }
 
-  lazy val millDiscover: Discover[this.type] = Discover[this.type]
+  import mill.main.TokenReaders.given
+  lazy val millDiscover: Discover[this.type] = ??? // Discover[this.type] // TODO: error (bSpooky: JavaModule.this.JavaModuleTests).ivyDepsTree used out of its defining scope
 }

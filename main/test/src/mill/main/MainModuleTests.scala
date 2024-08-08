@@ -27,6 +27,7 @@ object MainModuleTests extends TestSuite {
       Map("1" -> "hello", "2" -> "world")
     }
     def helloCommand(x: Int, y: Task[String]) = T.command { (x, y(), hello()) }
+    import mill.main.TokenReaders.given
     override lazy val millDiscover: Discover[this.type] = Discover[this.type]
   }
 

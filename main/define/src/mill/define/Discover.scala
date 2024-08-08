@@ -123,7 +123,7 @@ object Discover {
       val mapping = for {
         discoveredModuleType <- seen.toSeq.sortBy(_.typeSymbol.fullName)
         curCls = discoveredModuleType
-        methods = curCls.typeSymbol.methodMembers // getValsOrMeths(curCls) replaced by equivalent from Scala 3 mainargs
+        methods = curCls.typeSymbol.methodMembers.filterNot(m => m.isSuperAccessor || m.flags.is(Flags.Synthetic | Flags.Invisible | Flags.Private | Flags.Protected)) // getValsOrMeths(curCls) replaced by equivalent from Scala 3 mainargs
         overridesRoutes = {
           assertParamListCounts(
             curCls,

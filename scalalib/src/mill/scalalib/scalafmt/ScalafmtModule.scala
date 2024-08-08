@@ -94,5 +94,5 @@ object ScalafmtModule extends ExternalModule with ScalafmtModule {
     }
 
   import mill.main.TokenReaders.given
-  lazy val millDiscover: Discover[this.type] = Discover[this.type]
+  lazy val millDiscover: Discover[this.type] = ??? //Discover[this.type] TODO: missing outer accessor (maybe default value is incorrectly typed?)
 }

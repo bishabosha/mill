@@ -511,7 +511,7 @@ object TestGraphs {
   object nestedTaskCrosses extends TestBaseModule {
     // this is somehow necessary to let Discover see our inner (default) commands
     // I expected, that the identical inherited `millDiscover` is enough, but it isn't
-    override lazy val millDiscover: Discover[this.type] = Discover[this.type]
+    override lazy val millDiscover: Discover[this.type] = ??? // Discover[this.type] // TODO: error missing outer accessor
     object cross1 extends mill.Cross[Cross1]("210", "211", "212")
     trait Cross1 extends mill.Cross.Module[String] {
       def scalaVersion = crossValue

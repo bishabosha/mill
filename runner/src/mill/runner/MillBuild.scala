@@ -17,5 +17,6 @@ trait MillBuild extends Module {
 }
 
 object MillBuild extends ExternalModule with MillBuild {
+  import mill.main.TokenReaders.given
   override lazy val millDiscover: Discover[this.type] = Discover[this.type]
 }

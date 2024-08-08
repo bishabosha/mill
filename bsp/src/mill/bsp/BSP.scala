@@ -10,6 +10,7 @@ import mill.scalalib.CoursierModule
 
 object BSP extends ExternalModule with CoursierModule {
 
+  import mill.main.TokenReaders.given
   lazy val millDiscover: Discover[this.type] = Discover[this.type]
 
   private def bspWorkerLibs: T[Agg[PathRef]] = T {
