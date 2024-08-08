@@ -55,7 +55,7 @@ object Discover {
     import mainargs.Macros.*
     import scala.util.control.NonFatal
 
-    def applyImpl[T: Type](using Quotes): Expr[Discover[T]] = try {
+    def applyImpl[T: Type](using Quotes): Expr[Discover[T]] = {
       import quotes.reflect.*
       val seen = mutable.Set.empty[TypeRepr]
       val crossSym = Symbol.requiredClass("mill.define.Cross")
@@ -141,12 +141,19 @@ object Discover {
             } yield curCls.asType match {
               case '[t] =>
                 val expr =
-                  createMainData[Any, t](
-                    m,
-                    m.annotations.find(_.tpe =:= TypeRepr.of[mainargs.main]).getOrElse('{new mainargs.main()}.asTerm),
-                    m.paramSymss
-                  ).asExprOf[mainargs.MainData[?, ?]]
-                report.warning(s"generated maindata for ${m.fullName}:\n${expr.asTerm.show}", m.pos.getOrElse(Position.ofMacroExpansion))
+                  try
+                    createMainData[Any, t](
+                      m,
+                      m.annotations.find(_.tpe =:= TypeRepr.of[mainargs.main]).getOrElse('{new mainargs.main()}.asTerm),
+                      m.paramSymss
+                    ).asExprOf[mainargs.MainData[?, ?]]
+                  catch {
+                    case NonFatal(e) =>
+                      val (before, Array(after, _*)) = e.getStackTrace().span(e => !(e.getClassName() == "mill.define.Discover$Router$" && e.getMethodName() == "applyImpl")): @unchecked
+                      val trace = (before :+ after).map(_.toString).mkString("trace:\n", "\n", "\n...")
+                      report.errorAndAbort(s"Error generating maindata for ${m.fullName}: ${e}\n$trace", m.pos.getOrElse(Position.ofMacroExpansion))
+                  }
+                // report.warning(s"generated maindata for ${m.fullName}:\n${expr.asTerm.show}", m.pos.getOrElse(Position.ofMacroExpansion))
                 expr
             }
           )
@@ -168,11 +175,6 @@ object Discover {
         // import mill.main.TokenReaders.*
         Discover.apply2(Map(${Varargs(mapping)}*))
       }
-    } catch {
-      case NonFatal(e) =>
-        import quotes.reflect.*
-        val trace = e.getStackTrace.take(10).map(_.toString).mkString("\n")
-        report.errorAndAbort(s"Failed to generate mainargs entrypoints: ${e.getMessage}\n$trace")
     }
   }
 }

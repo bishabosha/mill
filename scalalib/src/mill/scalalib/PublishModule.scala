@@ -380,5 +380,6 @@ object PublishModule extends ExternalModule {
       }
     }
 
+  import mill.main.TokenReaders.given
   lazy val millDiscover: mill.define.Discover[this.type] = mill.define.Discover[this.type]
 }

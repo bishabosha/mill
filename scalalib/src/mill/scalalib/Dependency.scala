@@ -36,5 +36,6 @@ object Dependency extends ExternalModule {
   def showUpdates(ev: Evaluator, allowPreRelease: Boolean): Command[Unit] =
     Dependency.showUpdates(ev, allowPreRelease, Format.PerModule)
 
+  import mill.main.TokenReaders.given
   lazy val millDiscover: Discover[Dependency.this.type] = Discover[this.type]
 }
