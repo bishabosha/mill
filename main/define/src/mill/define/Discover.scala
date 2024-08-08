@@ -3,6 +3,8 @@ package mill.define
 import language.experimental.macros
 import scala.collection.mutable
 import scala.reflect.macros.blackbox
+import scala.collection.SeqView
+import scala.collection.View
 
 /**
  * Macro to walk the module tree and generate `mainargs` entrypoints for any
@@ -66,7 +68,7 @@ object Discover {
           val typeSym = tpe.typeSymbol
           for {
             // for some reason mill.define.Foreign has NoSymbol as type member.
-            m <- typeSym.typeMembers.filterNot(_ == Symbol.noSymbol).toList.sortBy(_.name.toString)
+            m <- typeSym.fieldMembers.filterNot(_ == Symbol.noSymbol).toList.sortBy(_.name.toString)
             memberTpe = {
               if m == Symbol.noSymbol then
                 report.errorAndAbort(s"no symbol found in $typeSym typemembers ${typeSym.typeMembers}", typeSym.pos.getOrElse(Position.ofMacroExpansion))
@@ -76,7 +78,7 @@ object Discover {
               //     // report.errorAndAbort(s"Error getting member type for $m in $typeSym: ${err}", m.pos.getOrElse(Position.ofMacroExpansion))
               //     tpe.memberType(m.typeRef.dealias.typeSymbol)
               // }
-              m.typeRef.dealias
+              m.termRef
             }
             if memberTpe.baseClasses.contains(moduleSym)
           } rec(memberTpe)
@@ -132,19 +134,21 @@ object Discover {
             (TypeRepr.of[mill.define.Target[?]], 0, "Target")
           )
 
+          def sortedMethods(sub: TypeRepr): Seq[Symbol] =
+            for {
+              m <- methods.toList.sortBy(_.fullName)
+              mType = curCls.memberType(m)
+              returnType = methodReturn(mType)
+              if returnType <:< sub
+            } yield m
+
           Tuple2(
             for {
-              m <- methods.toList.sortBy(_.fullName)
-              mType = curCls.memberType(m)
-              returnType = methodReturn(mType)
-              if returnType <:< TypeRepr.of[mill.define.NamedTask[?]]
+              m <- sortedMethods(sub = TypeRepr.of[mill.define.NamedTask[?]])
             } yield m.name,//.decoded // we don't need to decode the name in Scala 3
             for {
-              m <- methods.toList.sortBy(_.fullName)
-              mType = curCls.memberType(m)
-              returnType = methodReturn(mType)
-              if returnType <:< TypeRepr.of[mill.define.Command[?]]
-            } yield curCls.typeSymbol.typeRef.asType match {
+              m <- sortedMethods(sub = TypeRepr.of[mill.define.Command[?]])
+            } yield curCls.asType match {
               case '[t] =>
                 val expr =
                   try
@@ -182,8 +186,12 @@ object Discover {
           // import mill.main.TokenReaders.*
           Discover.apply2(Map(${Varargs(mapping)}*))
         }
-      report.warning(s"generated maindata for ${TypeRepr.of[T].show}:\n${expr.asTerm.show}", TypeRepr.of[T].typeSymbol.pos.getOrElse(Position.ofMacroExpansion))
-      expr
+      if TypeRepr.of[T].classSymbol.get.name == "BootstrapModule" then
+        report.error(s"generated maindata for ${TypeRepr.of[T].show}:\n${expr.asTerm.show}", TypeRepr.of[T].typeSymbol.pos.getOrElse(Position.ofMacroExpansion))
+        '{???}
+      else
+        report.warning(s"generated maindata for ${TypeRepr.of[T].show}:\n${expr.asTerm.show}", TypeRepr.of[T].typeSymbol.pos.getOrElse(Position.ofMacroExpansion))
+        expr
     }
   }
 }

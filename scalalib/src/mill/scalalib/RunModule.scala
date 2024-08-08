@@ -76,20 +76,24 @@ trait RunModule extends WithZincWorker {
    */
   def runUseArgsFile: T[Boolean] = T { scala.util.Properties.isWin }
 
+
+  private[mill] def hack_run_default_1(): Task[Args] = T.task(Args())
   /**
    * Runs this module's code in a subprocess and waits for it to finish
    */
-  def run(args: Task[Args] = T.task(Args())): Command[Unit] = T.command {
+  def run(args: Task[Args] = hack_run_default_1()): Command[Unit] = T.command {
     runForkedTask(finalMainClass, args)
   }
 
+
+  private[mill] def hack_runLocal_default_1(): Task[Args] = T.task(Args())
   /**
    * Runs this module's code in-process within an isolated classloader. This is
    * faster than `run`, but in exchange you have less isolation between runs
    * since the code can dirty the parent Mill process and potentially leave it
    * in a bad state.
    */
-  def runLocal(args: Task[Args] = T.task(Args())): Command[Unit] = T.command {
+  def runLocal(args: Task[Args] = hack_runLocal_default_1()): Command[Unit] = T.command {
     runLocalTask(finalMainClass, args)
   }
 

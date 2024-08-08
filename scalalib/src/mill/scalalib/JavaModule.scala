@@ -235,11 +235,12 @@ trait JavaModule
       T.traverse(compileModuleDepsChecked)(_.transitiveIvyDeps)().flatten
   }
 
+  private[mill] def hack_showModuleDeps_default_1(): Boolean = false
   /**
    * Show the module dependencies.
    * @param recursive If `true` include all recursive module dependencies, else only show direct dependencies.
    */
-  def showModuleDeps(recursive: Boolean = false): Command[Unit] = T.command {
+  def showModuleDeps(recursive: Boolean = hack_showModuleDeps_default_1()): Command[Unit] = T.command {
     val normalDeps = if (recursive) recursiveModuleDeps else moduleDepsChecked
     val compileDeps =
       if (recursive) compileModuleDepsChecked.flatMap(_.transitiveModuleDeps).distinct
@@ -842,10 +843,12 @@ trait JavaModule
       Result.Success(())
     }
 
+  private[mill] def hack_ivyDepsTree_default_1(): IvyDepsTreeArgs = IvyDepsTreeArgs()
+
   /**
    * Command to print the transitive dependency tree to STDOUT.
    */
-  def ivyDepsTree(args: IvyDepsTreeArgs = IvyDepsTreeArgs()): Command[Unit] = {
+  def ivyDepsTree(args: IvyDepsTreeArgs = hack_ivyDepsTree_default_1()): Command[Unit] = {
 
     val (invalidModules, validModules) =
       args.whatDependsOn.map(ModuleParser.javaOrScalaModule(_)).partitionMap(identity)

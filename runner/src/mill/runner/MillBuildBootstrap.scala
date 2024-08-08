@@ -13,7 +13,7 @@ import mill.main.client.OutFiles._
 import java.net.URLClassLoader
 
 /**
- * Logic around bootstrapping Mill, creating a [[MillBuildRootModule.BootstrapModule]]
+ * Logic around bootstrapping Mill, creating a [[bootstrapModule.type]]
  * and compiling builds/meta-builds and classloading their [[RootModule]]s so we
  * can evaluate the requested tasks on the [[RootModule]] representing the user's
  * `build.mill` file.
@@ -106,8 +106,136 @@ class MillBuildBootstrap(
 
         if (parsedScriptFiles.millImport) evaluateRec(depth + 1)
         else {
-          val bootstrapModule =
+          lazy val bootstrapModule: MillBuildRootModule.BootstrapModule =
             import mill.main.TokenReaders.given
+
+            lazy val BootstrapModuleDiscover: mill.define.Discover[bootstrapModule.type] =
+              mill.define.Discover.apply2[bootstrapModule.type](
+                Map[Class[?], (Seq[String], List[mainargs.MainData[?, ?]])](
+                  scala.Predef.ArrowAssoc[Class[?]](
+                    classOf[MillBuildRootModule.BootstrapModule]
+                  ).->[scala.Tuple2[Seq[String], List[mainargs.MainData[?, ?]]]](
+                    (
+                      () => scala.Tuple2.apply[Seq[String], List[mainargs.MainData[?, ?]]](
+                        Seq("clean", "init", "inspect", "path", "plan", "resolve", "show", "showNamed", "shutdown", "version", "visualize", "visualizePlan"),
+                        List[mainargs.MainData[?, ?]](
+                          mainargs.MainData.create[Any, bootstrapModule.type]("clean", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((bSpooky: bootstrapModule.type, params: Seq[Any]) => {
+                            val argss1: Seq[Seq[Any]] = Seq[Seq[Any]](params)
+                            bSpooky.clean(argss1.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], argss1.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                          })), mainargs.MainData.create[Any, bootstrapModule.type]("init", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.type]("args", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₂`: bootstrapModule.type, `params₂`: Seq[Any]) => {
+                            val `argss1₂`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₂`)
+                            `bSpooky₂`.init(`argss1₂`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₂`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                          })), mainargs.MainData.create[Any, bootstrapModule.type]("inspect", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₃`: bootstrapModule.type, `params₃`: Seq[Any]) => {
+                            val `argss1₃`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₃`)
+                            `bSpooky₃`.inspect(`argss1₃`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₃`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                          })), mainargs.MainData.create[Any, bootstrapModule.type]("path", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[String, bootstrapModule.type]("src", new mainargs.arg(), None)(using mainargs.TokensReader.StringRead), mainargs.ArgSig.create[String, bootstrapModule.type]("dest", new mainargs.arg(), None)(using mainargs.TokensReader.StringRead)), ((`bSpooky₄`: bootstrapModule.type, `params₄`: Seq[Any]) => {
+                            val `argss1₄`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₄`)
+                            `bSpooky₄`.path(`argss1₄`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₄`.apply(0).apply(1).asInstanceOf[String], `argss1₄`.apply(0).apply(2).asInstanceOf[String])
+                          })), mainargs.MainData.create[Any, bootstrapModule.type]("plan", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₅`: bootstrapModule.type, `params₅`: Seq[Any]) => {
+                            val `argss1₅`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₅`)
+                            `bSpooky₅`.plan(`argss1₅`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₅`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                          })), mainargs.MainData.create[Any, bootstrapModule.type]("resolve", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₆`: bootstrapModule.type, `params₆`: Seq[Any]) => {
+                            val `argss1₆`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₆`)
+                            `bSpooky₆`.resolve(`argss1₆`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₆`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                          })), mainargs.MainData.create[Any, bootstrapModule.type]("show", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₇`: bootstrapModule.type, `params₇`: Seq[Any]) => {
+                            val `argss1₇`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₇`)
+                            `bSpooky₇`.show(`argss1₇`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₇`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                          })), mainargs.MainData.create[Any, bootstrapModule.type]("showNamed", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₈`: bootstrapModule.type, `params₈`: Seq[Any]) => {
+                            val `argss1₈`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₈`)
+                            `bSpooky₈`.showNamed(`argss1₈`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₈`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                          })), mainargs.MainData.create[Any, bootstrapModule.type]("shutdown", new mainargs.main(), scala.Nil, ((`bSpooky₉`: bootstrapModule.type, `params₉`: Seq[Any]) => {
+                            val `argss1₉`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₉`)
+                            `bSpooky₉`.shutdown()
+                          })), mainargs.MainData.create[Any, bootstrapModule.type]("version", new mainargs.main(), scala.Nil, ((`bSpooky₁₀`: bootstrapModule.type, `params₁₀`: Seq[Any]) => {
+                            val `argss1₁₀`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₁₀`)
+                            `bSpooky₁₀`.version()
+                          })), mainargs.MainData.create[Any, bootstrapModule.type]("visualize", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₁₁`: bootstrapModule.type, `params₁₁`: Seq[Any]) => {
+                            val `argss1₁₁`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₁₁`)
+                            `bSpooky₁₁`.visualize(`argss1₁₁`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₁₁`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                          })), mainargs.MainData.create[Any, bootstrapModule.type]("visualizePlan", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₁₂`: bootstrapModule.type, `params₁₂`: Seq[Any]) => {
+                            val `argss1₁₂`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₁₂`)
+                            `bSpooky₁₂`.visualizePlan(`argss1₁₂`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₁₂`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                          }))
+                        )
+                      )
+                    ).apply()
+                  ),
+                  scala.Predef.ArrowAssoc[Class[?]](classOf[bootstrapModule.build.type]).->[scala.Tuple2[Seq[String], List[mainargs.MainData[?, ?]]]]((() => scala.Tuple2.apply[Seq[String], List[mainargs.MainData[?, ?]]](Seq("clean", "init", "inspect", "path", "plan", "resolve", "show", "showNamed", "shutdown", "version", "visualize", "visualizePlan", "allSourceFiles", "cliImports", "dummySources", "enclosingClasspath", "generateScriptSources", "generatedSources", "ivyDeps", "lineNumberPluginClasspath", "methodCodeHashSignatures", "parseBuildFiles", "platformSuffix", "resolveDepsExclusions", "resources", "runIvyDeps", "scalaVersion", "scalacOptions", "scalacPluginClasspath", "scalacPluginIvyDeps", "scriptImportGraph", "scriptSources", "sources", "unmanagedClasspath", "ideaCompileOutput", "allIvyDeps", "allSources", "artifactName", "artifactNameParts", "assembly", "bspCompileClasspath", "bspLocalClasspath", "bspLocalRunClasspath", "bspTransitiveCompileClasspath", "bspTransitiveLocalClasspath", "compileClasspath", "compileIvyDeps", "compileResources", "docJarUseArgsFile", "docResources", "finalMainClass", "finalMainClassOpt", "forkArgs", "forkEnv", "forkWorkingDir", "ivyDepsTree", "jar", "javacOptions", "javadocOptions", "launcher", "localClasspath", "localCompileClasspath", "localRunClasspath", "mainClass", "prependShellScript", "resolvedIvyDeps", "resolvedRunIvyDeps", "run", "runBackground", "runClasspath", "runLocal", "runMain", "runMainBackground", "runMainLocal", "runUseArgsFile", "showModuleDeps", "sourceJar", "transitiveCompileClasspath", "transitiveCompileIvyDeps", "transitiveIvyDeps", "transitiveLocalClasspath", "upstreamAssembly", "upstreamAssembly2", "upstreamAssemblyClasspath", "upstreamCompileOutput", "zincIncrementalCompilation", "zincReportCachedProblems", "allLocalMainClasses", "allScalacOptions", "ammoniteReplClasspath", "ammoniteVersion", "artifactId", "artifactScalaVersion", "artifactSuffix", "bspCompileClassesPath", "compile", "console", "consoleScalacOptions", "crossFullScalaVersion", "docJar", "docSources", "mandatoryIvyDeps", "mandatoryScalacOptions", "manifest", "prepareOffline", "repl", "resolvedAmmoniteReplIvyDeps", "scalaCompilerClasspath", "scalaDocClasspath", "scalaDocOptions", "scalaDocPluginClasspath", "scalaDocPluginIvyDeps", "scalaLibraryIvyDeps", "scalaOrganization", "scalacHelp", "semanticDbData", "semanticDbPluginClasspath", "semanticDbScalaVersion", "zincAuxiliaryClassFileExtensions", "bspCompiledClassesAndSemanticDbFiles", "compiledClassesAndSemanticDbFiles", "resolvedSemanticDbJavaPluginIvyDeps", "semanticDbEnablePluginScalacOptions", "semanticDbJavaVersion", "semanticDbPluginIvyDeps", "semanticDbVersion"), List[mainargs.MainData[?, ?]](mainargs.MainData.create[Any, bootstrapModule.build.type]("clean", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.build.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₁₃`: bootstrapModule.build.type, `params₁₃`: Seq[Any]) => {
+                    val `argss1₁₃`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₁₃`)
+                    `bSpooky₁₃`.clean(`argss1₁₃`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₁₃`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("init", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.build.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("args", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₁₄`: bootstrapModule.build.type, `params₁₄`: Seq[Any]) => {
+                    val `argss1₁₄`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₁₄`)
+                    `bSpooky₁₄`.init(`argss1₁₄`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₁₄`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("inspect", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.build.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₁₅`: bootstrapModule.build.type, `params₁₅`: Seq[Any]) => {
+                    val `argss1₁₅`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₁₅`)
+                    `bSpooky₁₅`.inspect(`argss1₁₅`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₁₅`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("path", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.build.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[String, bootstrapModule.build.type]("src", new mainargs.arg(), None)(using mainargs.TokensReader.StringRead), mainargs.ArgSig.create[String, bootstrapModule.build.type]("dest", new mainargs.arg(), None)(using mainargs.TokensReader.StringRead)), ((`bSpooky₁₆`: bootstrapModule.build.type, `params₁₆`: Seq[Any]) => {
+                    val `argss1₁₆`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₁₆`)
+                    `bSpooky₁₆`.path(`argss1₁₆`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₁₆`.apply(0).apply(1).asInstanceOf[String], `argss1₁₆`.apply(0).apply(2).asInstanceOf[String])
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("plan", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.build.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₁₇`: bootstrapModule.build.type, `params₁₇`: Seq[Any]) => {
+                    val `argss1₁₇`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₁₇`)
+                    `bSpooky₁₇`.plan(`argss1₁₇`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₁₇`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("resolve", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.build.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₁₈`: bootstrapModule.build.type, `params₁₈`: Seq[Any]) => {
+                    val `argss1₁₈`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₁₈`)
+                    `bSpooky₁₈`.resolve(`argss1₁₈`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₁₈`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("show", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.build.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₁₉`: bootstrapModule.build.type, `params₁₉`: Seq[Any]) => {
+                    val `argss1₁₉`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₁₉`)
+                    `bSpooky₁₉`.show(`argss1₁₉`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₁₉`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("showNamed", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.build.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₂₀`: bootstrapModule.build.type, `params₂₀`: Seq[Any]) => {
+                    val `argss1₂₀`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₂₀`)
+                    `bSpooky₂₀`.showNamed(`argss1₂₀`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₂₀`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("shutdown", new mainargs.main(), scala.Nil, ((`bSpooky₂₁`: bootstrapModule.build.type, `params₂₁`: Seq[Any]) => {
+                    val `argss1₂₁`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₂₁`)
+                    `bSpooky₂₁`.shutdown()
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("version", new mainargs.main(), scala.Nil, ((`bSpooky₂₂`: bootstrapModule.build.type, `params₂₂`: Seq[Any]) => {
+                    val `argss1₂₂`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₂₂`)
+                    `bSpooky₂₂`.version()
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("visualize", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.build.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₂₃`: bootstrapModule.build.type, `params₂₃`: Seq[Any]) => {
+                    val `argss1₂₃`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₂₃`)
+                    `bSpooky₂₃`.visualize(`argss1₂₃`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₂₃`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("visualizePlan", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.eval.Evaluator, bootstrapModule.build.type]("evaluator", new mainargs.arg(), None)(using mill.main.TokenReaders.millEvaluatorTokenReader[mill.eval.Evaluator]), mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("targets", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₂₄`: bootstrapModule.build.type, `params₂₄`: Seq[Any]) => {
+                    val `argss1₂₄`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₂₄`)
+                    `bSpooky₂₄`.visualizePlan(`argss1₂₄`.apply(0).apply(0).asInstanceOf[mill.eval.Evaluator], `argss1₂₄`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("ivyDepsTree", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.scalalib.IvyDepsTreeArgs, bootstrapModule.build.type]("args", new mainargs.arg(), scala.Some.apply[scala.Function1[bootstrapModule.build.type, mill.scalalib.IvyDepsTreeArgs]](((_$6: bootstrapModule.build.type) => bootstrapModule.build.hack_ivyDepsTree_default_1())))(mill.scalalib.IvyDepsTreeArgs.argsReader)), ((`bSpooky₂₅`: bootstrapModule.build.type, `params₂₅`: Seq[Any]) => {
+                    val `argss1₂₅`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₂₅`)
+                    `bSpooky₂₅`.ivyDepsTree(`argss1₂₅`.apply(0).apply(0).asInstanceOf[mill.scalalib.IvyDepsTreeArgs])
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("run", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.define.Task[mill.Args], bootstrapModule.build.type]("args", new mainargs.arg(), scala.Some.apply[scala.Function1[bootstrapModule.build.type, mill.define.Task[mill.Args]]](((`_$6₂`: bootstrapModule.build.type) => bootstrapModule.build.hack_run_default_1())))(mill.main.TokenReaders.millTaskTokenReader[mill.define.Args](mill.main.TokenReaders.millArgsTokenReader))), ((`bSpooky₂₆`: bootstrapModule.build.type, `params₂₆`: Seq[Any]) => {
+                    val `argss1₂₆`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₂₆`)
+                    `bSpooky₂₆`.run(`argss1₂₆`.apply(0).apply(0).asInstanceOf[mill.define.Task[mill.Args]])
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("runBackground", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("args", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₂₇`: bootstrapModule.build.type, `params₂₇`: Seq[Any]) => {
+                    val `argss1₂₇`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₂₇`)
+                    `bSpooky₂₇`.runBackground(`argss1₂₇`.apply(0).apply(0).asInstanceOf[Seq[String]]: _*)
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("runLocal", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mill.define.Task[mill.Args], bootstrapModule.build.type]("args", new mainargs.arg(), scala.Some.apply[scala.Function1[bootstrapModule.build.type, mill.define.Task[mill.Args]]](((`_$6₃`: bootstrapModule.build.type) => bootstrapModule.build.hack_runLocal_default_1())))(mill.main.TokenReaders.millTaskTokenReader[mill.define.Args](mill.main.TokenReaders.millArgsTokenReader))), ((`bSpooky₂₈`: bootstrapModule.build.type, `params₂₈`: Seq[Any]) => {
+                    val `argss1₂₈`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₂₈`)
+                    `bSpooky₂₈`.runLocal(`argss1₂₈`.apply(0).apply(0).asInstanceOf[mill.define.Task[mill.Args]])
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("runMain", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[String, bootstrapModule.build.type]("mainClass", new mainargs.arg(), None)(using mainargs.TokensReader.StringRead), mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("args", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₂₉`: bootstrapModule.build.type, `params₂₉`: Seq[Any]) => {
+                    val `argss1₂₉`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₂₉`)
+                    `bSpooky₂₉`.runMain(`argss1₂₉`.apply(0).apply(0).asInstanceOf[String], `argss1₂₉`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("runMainBackground", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[String, bootstrapModule.build.type]("mainClass", new mainargs.arg(), None)(using mainargs.TokensReader.StringRead), mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("args", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₃₀`: bootstrapModule.build.type, `params₃₀`: Seq[Any]) => {
+                    val `argss1₃₀`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₃₀`)
+                    `bSpooky₃₀`.runMainBackground(`argss1₃₀`.apply(0).apply(0).asInstanceOf[String], `argss1₃₀`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("runMainLocal", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[String, bootstrapModule.build.type]("mainClass", new mainargs.arg(), None)(using mainargs.TokensReader.StringRead), mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("args", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₃₁`: bootstrapModule.build.type, `params₃₁`: Seq[Any]) => {
+                    val `argss1₃₁`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₃₁`)
+                    `bSpooky₃₁`.runMainLocal(`argss1₃₁`.apply(0).apply(0).asInstanceOf[String], `argss1₃₁`.apply(0).apply(1).asInstanceOf[Seq[String]]: _*)
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("showModuleDeps", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[scala.Boolean, bootstrapModule.build.type]("recursive", new mainargs.arg(), scala.Some.apply[scala.Function1[bootstrapModule.build.type, scala.Boolean]](((`_$6₄`: bootstrapModule.build.type) => bootstrapModule.build.hack_showModuleDeps_default_1())))(mainargs.TokensReader.BooleanRead)), ((`bSpooky₃₂`: bootstrapModule.build.type, `params₃₂`: Seq[Any]) => {
+                    val `argss1₃₂`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₃₂`)
+                    `bSpooky₃₂`.showModuleDeps(`argss1₃₂`.apply(0).apply(0).asInstanceOf[scala.Boolean])
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("console", new mainargs.main(), scala.Nil, ((`bSpooky₃₃`: bootstrapModule.build.type, `params₃₃`: Seq[Any]) => {
+                    val `argss1₃₃`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₃₃`)
+                    `bSpooky₃₃`.console()
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("prepareOffline", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[mainargs.Flag, bootstrapModule.build.type]("all", new mainargs.arg(), None)(mainargs.TokensReader.FlagRead)), ((`bSpooky₃₄`: bootstrapModule.build.type, `params₃₄`: Seq[Any]) => {
+                    val `argss1₃₄`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₃₄`)
+                    `bSpooky₃₄`.prepareOffline(`argss1₃₄`.apply(0).apply(0).asInstanceOf[mainargs.Flag])
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("repl", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("replOptions", new mainargs.arg(), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₃₅`: bootstrapModule.build.type, `params₃₅`: Seq[Any]) => {
+                    val `argss1₃₅`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₃₅`)
+                    `bSpooky₃₅`.repl(`argss1₃₅`.apply(0).apply(0).asInstanceOf[Seq[String]]: _*)
+                  })), mainargs.MainData.create[Any, bootstrapModule.build.type]("scalacHelp", new mainargs.main(), List[mainargs.ArgSig](mainargs.ArgSig.create[Seq[String], bootstrapModule.build.type]("args", new mainargs.arg(doc = "The option to pass to the scala compiler, e.g. \"-Xlint:help\". Default: \"-help\""), None)(using mainargs.TokensReader.SeqRead[Seq, String](using mainargs.TokensReader.StringRead, Seq.iterableFactory[String]))), ((`bSpooky₃₆`: bootstrapModule.build.type, `params₃₆`: Seq[Any]) => {
+                    val `argss1₃₆`: Seq[Seq[Any]] = Seq[Seq[Any]](`params₃₆`)
+                    `bSpooky₃₆`.scalacHelp(`argss1₃₆`.apply(0).apply(0).asInstanceOf[Seq[String]]: _*)
+                  }))))).apply())
+              ))
+            end BootstrapModuleDiscover
+
             new MillBuildRootModule.BootstrapModule(
               projectRoot,
               recRoot(projectRoot, depth),
@@ -115,10 +243,12 @@ class MillBuildBootstrap(
             )(
               mill.main.RootModule.Info(
                 recRoot(projectRoot, depth),
-                ???
-                //Discover[MillBuildRootModule.BootstrapModule] // TODO: missing outer accessor (maybe default value is incorrectly typed?)
+                BootstrapModuleDiscover
+                // ??? // TODO: if we can't sort out the path dependent types, we will have to open an issue in dotty - and also offer a code-gen solution instead
+                // Discover[bootstrapModule.type] // TODO: missing outer accessor (maybe default value is incorrectly typed?)
               )
             )
+          end bootstrapModule
           RunnerState(Some(bootstrapModule), Nil, None)
         }
       }
