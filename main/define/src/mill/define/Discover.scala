@@ -70,7 +70,13 @@ object Discover {
             memberTpe = {
               if m == Symbol.noSymbol then
                 report.errorAndAbort(s"no symbol found in $typeSym typemembers ${typeSym.typeMembers}", typeSym.pos.getOrElse(Position.ofMacroExpansion))
-              tpe.memberType(m)
+              // try tpe.memberType(m)
+              // catch {
+              //   case NonFatal(err) =>
+              //     // report.errorAndAbort(s"Error getting member type for $m in $typeSym: ${err}", m.pos.getOrElse(Position.ofMacroExpansion))
+              //     tpe.memberType(m.typeRef.dealias.typeSymbol)
+              // }
+              m.typeRef.dealias
             }
             if memberTpe.baseClasses.contains(moduleSym)
           } rec(memberTpe)
@@ -138,7 +144,7 @@ object Discover {
               mType = curCls.memberType(m)
               returnType = methodReturn(mType)
               if returnType <:< TypeRepr.of[mill.define.Command[?]]
-            } yield curCls.asType match {
+            } yield curCls.typeSymbol.typeRef.asType match {
               case '[t] =>
                 val expr =
                   try
@@ -170,11 +176,14 @@ object Discover {
         '{$lhs -> $overridesLambda}
       }
 
-      '{
-        // TODO: we can not import this here, so we have to import at the use site now, or redesign?
-        // import mill.main.TokenReaders.*
-        Discover.apply2(Map(${Varargs(mapping)}*))
-      }
+      val expr: Expr[Discover[T]] =
+        '{
+          // TODO: we can not import this here, so we have to import at the use site now, or redesign?
+          // import mill.main.TokenReaders.*
+          Discover.apply2(Map(${Varargs(mapping)}*))
+        }
+      report.warning(s"generated maindata for ${TypeRepr.of[T].show}:\n${expr.asTerm.show}", TypeRepr.of[T].typeSymbol.pos.getOrElse(Position.ofMacroExpansion))
+      expr
     }
   }
 }
