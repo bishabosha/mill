@@ -52,7 +52,7 @@ object Deps {
   // The Scala version to use
   // When updating, run "Publish Bridges" Github Actions for the new version
   // and then add to it `bridgeScalaVersions`
-  val scalaVersion = "3.5.0-RC7"
+  val scalaVersion = "3.5.0"
   val scala2Version = "2.13.14"
   // Scoverage 1.x will not get releases for newer Scala versions
   val scalaVersionForScoverageWorker1 = "2.13.8"
