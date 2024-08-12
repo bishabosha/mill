@@ -319,8 +319,8 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
   def worker[T](t: Task[T])(implicit ctx: mill.define.Ctx): Worker[T] =
     ??? // macro Internal.workerImpl1[T]
 
-  def worker[T](t: Result[T])(implicit ctx: mill.define.Ctx): Worker[T] =
-    ??? // macro Internal.workerImpl2[T]
+  inline def worker[T](inline t: Result[T])(implicit ctx: mill.define.Ctx): Worker[T] =
+    ${ Internal.workerImpl2[T]('t)('ctx, 'this) }
 
   /**
    * Creates an anonymous `Task`. These depend on other tasks and
@@ -617,21 +617,23 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
 
     def workerImpl2[T: Type](using
         Quotes
-    )(t: Expr[T])(ctx: Expr[mill.define.Ctx]): Expr[Worker[T]] = {
-      // import c.universe._
+    )(t: Expr[Result[T]])(
+        ctx: Expr[mill.define.Ctx],
+        caller: Expr[Applicative.Applyer[Task, Task, Result, mill.api.Ctx]]
+    ): Expr[Worker[T]] = {
+      val taskIsPrivate = isPrivateTargetOption()
 
-      // val taskIsPrivate = isPrivateTargetOption(c)
+      val lhs = Applicative.impl[Task, Task, Result, T, mill.api.Ctx](caller, t)
 
-      // mill.moduledefs.Cacher.impl0[Worker[T]](
-      //   '{
-      //     new Worker[T](
-      //       Applicative.impl[Task, Task, Result, T, mill.api.Ctx](c)(t).splice,
-      //       ctx.splice,
-      //       taskIsPrivate.splice
-      //     )
-      //   }
-      // )
-      ???
+      mill.moduledefs.Cacher.impl0[Worker[T]](
+        '{
+          new Worker[T](
+            $lhs,
+            $ctx,
+            $taskIsPrivate
+          )
+        }
+      )
     }
 
     def persistentImpl[T: Type](using Quotes)(t: Expr[Result[T]])(
