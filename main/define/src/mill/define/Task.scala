@@ -4,7 +4,9 @@ import mill.api.{CompileProblemReporter, Logger, PathRef, Result, TestReporter}
 import mill.define.Applicative.Applyable
 import upickle.default.{ReadWriter => RW, Writer => W}
 
-import scala.language.experimental.macros
+import scala.language.implicitConversions
+import scala.quoted.*
+
 import scala.reflect.macros.blackbox.Context
 
 /**
@@ -198,8 +200,8 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * return type is JSON serializable. In return they automatically caches their
    * return value to disk, only re-computing if upstream [[Task]]s change
    */
-  implicit def apply[T](t: T)(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
-    ??? // macro Internal.targetImpl[T]
+  implicit inline def apply[T](t: T)(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
+    ${ Internal.targetImpl[T]('t)('rw, 'ctx) }
 
   implicit def apply[T](t: Result[T])(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
     ??? // macro Internal.targetResultImpl[T]
@@ -341,20 +343,47 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
   }
 
   object Internal {
-    private def isPrivateTargetOption(c: Context): c.Expr[Option[Boolean]] = {
-      ???
-      // import c.universe._
-      // if (c.internal.enclosingOwner.isPrivate) reify(Some(true))
-      // else reify(Some(false))
+    private def targetOwner()(using Quotes): Option[quotes.reflect.Symbol] = {
+      import quotes.reflect.*
+
+      val TargetSym = TypeRepr.of[Target[?]].typeSymbol
+
+      // TODO: also copied in Discover.scala
+      // TODO: can targets be polymorphic?
+      def methodReturn(tpe: TypeRepr): TypeRepr = tpe match
+        case MethodType(_, _, res) => res
+        case ByNameType(tpe) => tpe
+        case _ => tpe
+
+      def loop(owner: Symbol): Option[Symbol] =
+        if owner.isPackageDef || owner == Symbol.noSymbol then None
+        else if owner.isTerm
+          && owner.flags.is(Flags.Method)
+          && methodReturn(owner.termRef.widen).baseClasses.contains(TargetSym)
+        then Some(owner)
+        else loop(owner.owner)
+
+      loop(Symbol.spliceOwner)
     }
 
-    def targetImpl[T: c.WeakTypeTag](c: Context)(t: c.Expr[T])(
-        rw: c.Expr[RW[T]],
-        ctx: c.Expr[mill.define.Ctx]
-    ): c.Expr[Target[T]] = {
-      // import c.universe._
+    private def isPrivateTargetOption()(using Quotes): Expr[Option[Boolean]] = {
+      import quotes.reflect.*
 
-      // val taskIsPrivate = isPrivateTargetOption(c)
+      val taskOwner = targetOwner().getOrElse {
+        report.errorAndAbort("Cannot find the owner of the target", Position.ofMacroExpansion)
+      }
+
+      if taskOwner.flags.is(Flags.Private) then Expr(Some(true))
+      else Expr(Some(false))
+    }
+
+    def targetImpl[T: Type](t: Expr[T])(
+        rw: Expr[RW[T]],
+        ctx: Expr[mill.define.Ctx]
+    )(using Quotes): Expr[Target[T]] = {
+      import quotes.reflect.*
+
+      val taskIsPrivate = isPrivateTargetOption()
 
       // val lhs = Applicative.impl0[Task, T, mill.api.Ctx](c)(reify(Result.create(t.splice)).tree)
 
