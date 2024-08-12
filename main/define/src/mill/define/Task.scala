@@ -238,8 +238,10 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
   def sources(values: Result[os.Path]*)(implicit ctx: mill.define.Ctx): Target[Seq[PathRef]] =
     ??? // macro Internal.sourcesImpl1
 
-  def sources(values: Result[Seq[PathRef]])(implicit ctx: mill.define.Ctx): Target[Seq[PathRef]] =
-    ??? // macro Internal.sourcesImpl2
+  inline def sources(inline values: Result[Seq[PathRef]])(implicit
+      ctx: mill.define.Ctx
+  ): Target[Seq[PathRef]] =
+    ${ Internal.sourcesImpl2('this, 'values)('ctx) }
 
   /**
    * Similar to [[Source]], but only for a single source file or folder. Defined
@@ -350,11 +352,16 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
       // In Scala 3, the top level splice of a macro is owned by a symbol called "macro" with the macro flag set,
       // but not the method flag.
       def isMacroOwner(sym: Symbol)(using Quotes): Boolean =
-        sym.name == "macro" && sym.flags.is(Flags.Macro | Flags.Synthetic) && !sym.flags.is(Flags.Method)
+        sym.name == "macro" && sym.flags.is(Flags.Macro | Flags.Synthetic) && !sym.flags.is(
+          Flags.Method
+        )
 
       def loop(owner: Symbol): T =
         if owner.isPackageDef || owner == Symbol.noSymbol then
-          report.errorAndAbort("Cannot find the owner of the macro expansion", Position.ofMacroExpansion)
+          report.errorAndAbort(
+            "Cannot find the owner of the macro expansion",
+            Position.ofMacroExpansion
+          )
         else if isMacroOwner(owner) then op(owner.owner) // Skip the "macro" owner
         else loop(owner.owner)
 
@@ -377,7 +384,8 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
 
       val taskIsPrivate = isPrivateTargetOption()
 
-      val lhs = Applicative.impl[Task, Task, Result, T, mill.api.Ctx](caller, '{Result.create($t)})
+      val lhs =
+        Applicative.impl[Task, Task, Result, T, mill.api.Ctx](caller, '{ Result.create($t) })
 
       mill.moduledefs.Cacher.impl0[Target[T]](
         '{
@@ -456,22 +464,25 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
       ???
     }
 
-    def sourcesImpl2(c: Context)(values: c.Expr[Result[Seq[PathRef]]])(ctx: c.Expr[mill.define.Ctx])
-        : c.Expr[Target[Seq[PathRef]]] = {
-      // import c.universe._
+    def sourcesImpl2(using Quotes)(
+        caller: Expr[Applicative.Applyer[Task, Task, Result, mill.api.Ctx]],
+        values: Expr[Result[Seq[PathRef]]]
+    )(ctx: Expr[mill.define.Ctx]): Expr[Target[Seq[PathRef]]] = {
+      import quotes.reflect.*
 
-      // val taskIsPrivate = isPrivateTargetOption(c)
+      val taskIsPrivate = isPrivateTargetOption()
 
-      // mill.moduledefs.Cacher.impl0[SourcesImpl](c)(
-      //   reify(
-      //     new SourcesImpl(
-      //       Applicative.impl0[Task, Seq[PathRef], mill.api.Ctx](c)(values.tree).splice,
-      //       ctx.splice,
-      //       taskIsPrivate.splice
-      //     )
-      //   )
-      // )
-      ???
+      val lhs = Applicative.impl[Task, Task, Result, Seq[PathRef], mill.api.Ctx](caller, values)
+
+      mill.moduledefs.Cacher.impl0[SourcesImpl](
+        '{
+          new SourcesImpl(
+            $lhs,
+            $ctx,
+            $taskIsPrivate
+          )
+        }
+      )
     }
 
     def sourceImpl1(c: Context)(value: c.Expr[Result[os.Path]])(ctx: c.Expr[mill.define.Ctx])
