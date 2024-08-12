@@ -343,38 +343,28 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
   }
 
   object Internal {
-    private def targetOwner()(using Quotes): Option[quotes.reflect.Symbol] = {
+    private def withMacroOwner[T](using Quotes)(op: quotes.reflect.Symbol => T): T = {
       import quotes.reflect.*
 
-      val TargetSym = TypeRepr.of[Target[?]].typeSymbol
+      // In Scala 3, the top level splice of a macro is owned by a symbol called "macro" with the macro flag set,
+      // but not the method flag.
+      def isMacroOwner(sym: Symbol)(using Quotes): Boolean =
+        sym.name == "macro" && sym.flags.is(Flags.Macro | Flags.Synthetic) && !sym.flags.is(Flags.Method)
 
-      // TODO: also copied in Discover.scala
-      // TODO: can targets be polymorphic?
-      def methodReturn(tpe: TypeRepr): TypeRepr = tpe match
-        case MethodType(_, _, res) => res
-        case ByNameType(tpe) => tpe
-        case _ => tpe
-
-      def loop(owner: Symbol): Option[Symbol] =
-        if owner.isPackageDef || owner == Symbol.noSymbol then None
-        else if owner.isTerm
-          && owner.flags.is(Flags.Method)
-          && methodReturn(owner.termRef.widen).baseClasses.contains(TargetSym)
-        then Some(owner)
+      def loop(owner: Symbol): T =
+        if owner.isPackageDef || owner == Symbol.noSymbol then
+          report.errorAndAbort("Cannot find the owner of the macro expansion", Position.ofMacroExpansion)
+        else if isMacroOwner(owner) then op(owner.owner) // Skip the "macro" owner
         else loop(owner.owner)
 
       loop(Symbol.spliceOwner)
     }
 
-    private def isPrivateTargetOption()(using Quotes): Expr[Option[Boolean]] = {
-      import quotes.reflect.*
-
-      val taskOwner = targetOwner().getOrElse {
-        report.errorAndAbort("Cannot find the owner of the target", Position.ofMacroExpansion)
-      }
-
-      if taskOwner.flags.is(Flags.Private) then Expr(Some(true))
-      else Expr(Some(false))
+    private def isPrivateTargetOption()(using Quotes): Expr[Option[Boolean]] = withMacroOwner {
+      owner =>
+        import quotes.reflect.*
+        if owner.flags.is(Flags.Private) then Expr(Some(true))
+        else Expr(Some(false))
     }
 
     def targetImpl[T: Type](t: Expr[T])(
@@ -385,19 +375,18 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
 
       val taskIsPrivate = isPrivateTargetOption()
 
-      // val lhs = Applicative.impl0[Task, T, mill.api.Ctx](c)(reify(Result.create(t.splice)).tree)
+      val lhs = Applicative.impl0[Task, T, mill.api.Ctx]('{Result.create($t)}.asTerm)
 
-      // mill.moduledefs.Cacher.impl0[Target[T]](c)(
-      //   reify(
-      //     new TargetImpl[T](
-      //       lhs.splice,
-      //       ctx.splice,
-      //       rw.splice,
-      //       taskIsPrivate.splice
-      //     )
-      //   )
-      // )
-      ???
+      mill.moduledefs.Cacher.impl0[Target[T]](
+        '{
+          new TargetImpl[T](
+            $lhs,
+            $ctx,
+            $rw,
+            $taskIsPrivate
+          )
+        }
+      )
     }
 
     def targetResultImpl[T: c.WeakTypeTag](c: Context)(t: c.Expr[Result[T]])(

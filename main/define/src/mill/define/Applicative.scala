@@ -5,6 +5,8 @@ import mill.api.internal
 import scala.annotation.compileTimeOnly
 import scala.reflect.macros.blackbox.Context
 
+import scala.quoted.*
+
 /**
  * A generic Applicative-functor macro: translates calls to
  *
@@ -39,12 +41,12 @@ object Applicative {
     def traverseCtx[I, R](xs: Seq[W[I]])(f: (IndexedSeq[I], Ctx) => Z[R]): T[R]
   }
 
-  def impl[M[_], T: c.WeakTypeTag, Ctx: c.WeakTypeTag](c: Context)(t: c.Expr[T]): c.Expr[M[T]] = {
-    // impl0(c)(t.tree)(implicitly[c.WeakTypeTag[T]], implicitly[c.WeakTypeTag[Ctx]])
-    ???
+  def impl[M[_], T: Type, Ctx: Type](using Quotes)(t: Expr[T]): Expr[M[T]] = {
+    import quotes.reflect.*
+    impl0(using quotes)(t.asTerm)(using Type.of[T], Type.of[Ctx])
   }
-  def impl0[M[_], T: c.WeakTypeTag, Ctx: c.WeakTypeTag](c: Context)(t: c.Tree): c.Expr[M[T]] = {
-    ???
+  def impl0[M[_], T: Type, Ctx: Type](using Quotes)(t: quotes.reflect.Tree): Expr[M[T]] = {
+    '{???}
     // import c.universe._
     // def rec(t: Tree): Iterator[c.Tree] = Iterator(t) ++ t.children.flatMap(rec(_))
 
