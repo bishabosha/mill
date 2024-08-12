@@ -200,8 +200,8 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * return type is JSON serializable. In return they automatically caches their
    * return value to disk, only re-computing if upstream [[Task]]s change
    */
-  implicit inline def apply[T](t: T)(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
-    ${ Internal.targetImpl[T]('t)('rw, 'ctx) }
+  implicit inline def apply[T](inline t: T)(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
+    ${ Internal.targetImpl[T]('t)('rw, 'ctx, 'this) }
 
   implicit def apply[T](t: Result[T])(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
     ??? // macro Internal.targetResultImpl[T]
@@ -319,7 +319,8 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * command line and do not perform any caching. Typically used as helpers to
    * implement `T{...}` targets.
    */
-  def task[T](t: Result[T]): Task[T] = ??? // macro Applicative.impl[Task, T, mill.api.Ctx]
+  inline def task[T](inline t: Result[T]): Task[T] =
+    ${ Applicative.impl[Task, Task, Result, T, mill.api.Ctx]('this, 't) }
 
   /**
    * Converts a `Seq[Task[T]]` into a `Task[Seq[T]]`
@@ -369,13 +370,14 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
 
     def targetImpl[T: Type](t: Expr[T])(
         rw: Expr[RW[T]],
-        ctx: Expr[mill.define.Ctx]
+        ctx: Expr[mill.define.Ctx],
+        caller: Expr[Applicative.Applyer[Task, Task, Result, mill.api.Ctx]]
     )(using Quotes): Expr[Target[T]] = {
       import quotes.reflect.*
 
       val taskIsPrivate = isPrivateTargetOption()
 
-      val lhs = Applicative.impl0[Task, T, mill.api.Ctx]('{Result.create($t)}.asTerm)
+      val lhs = Applicative.impl[Task, Task, Result, T, mill.api.Ctx](caller, '{Result.create($t)})
 
       mill.moduledefs.Cacher.impl0[Target[T]](
         '{
