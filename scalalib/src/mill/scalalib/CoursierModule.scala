@@ -4,6 +4,7 @@ import coursier.cache.FileCache
 import coursier.{Dependency, Repository, Resolve}
 import coursier.core.Resolution
 import mill.T
+import mill.api.Result
 import mill.define.Task
 import mill.api.PathRef
 
@@ -137,6 +138,15 @@ object CoursierModule {
         deps: IterableOnce[T],
         sources: Boolean = false
     ): Agg[PathRef] = {
+      // TODO: `getOrThrow` swallows error messages when Failure is returned.
+      // so I introduced resolveDeps0 where it makes sense to propagate the error message
+      resolveDeps0(deps, sources).getOrThrow
+    }
+
+    def resolveDeps0[T: CoursierModule.Resolvable](
+        deps: IterableOnce[T],
+        sources: Boolean = false
+    ): Result[Agg[PathRef]] = {
       Lib.resolveDependencies(
         repositories = repositories,
         deps = deps.map(implicitly[CoursierModule.Resolvable[T]].bind(_, bind)),
@@ -145,7 +155,7 @@ object CoursierModule {
         customizer = customizer,
         coursierCacheCustomizer = coursierCacheCustomizer,
         ctx = ctx
-      ).getOrThrow
+      )
     }
   }
 

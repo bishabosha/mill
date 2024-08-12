@@ -16,7 +16,7 @@ object Dependency extends ExternalModule {
     T.command {
       DependencyUpdatesImpl(
         ev,
-        ???,// implicitly,
+        implicitly,
         ev.rootModule,
         ev.rootModule.millDiscover,
         allowPreRelease

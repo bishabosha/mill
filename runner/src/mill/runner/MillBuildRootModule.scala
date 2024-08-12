@@ -91,8 +91,8 @@ class MillBuildRootModule()(implicit
     Agg.from(
       MillIvy.processMillIvyDepSignature(parseBuildFiles().ivyDeps)
         .map(mill.scalalib.Dep.parse)
-    ) ++
-      Agg(ivy"com.lihaoyi::mill-moduledefs:${Versions.millModuledefsVersion}")
+    ) /*++
+      Agg(ivy"com.lihaoyi::mill-moduledefs:${Versions.millModuledefsVersion}")*/
   }
 
   override def runIvyDeps = T {
@@ -219,8 +219,9 @@ class MillBuildRootModule()(implicit
    * We exclude them to avoid incompatible or duplicate artifacts on the classpath.
    */
   protected def resolveDepsExclusions: T[Seq[(String, String)]] = T {
-    Lib.millAssemblyEmbeddedDeps.toSeq.map(d =>
-      (d.dep.module.organization.value, d.dep.module.name.value)
+    Lib.millAssemblyEmbeddedDeps.toSeq.flatMap(d =>
+      if d.dep.module.name.value == "scala-library" && scalaVersion().startsWith("3.") then None
+      else Some((d.dep.module.organization.value, d.dep.module.name.value))
     )
   }
 
@@ -233,18 +234,18 @@ class MillBuildRootModule()(implicit
   }
 
   override def scalacPluginIvyDeps: T[Agg[Dep]] = Agg(
-    ivy"com.lihaoyi:::scalac-mill-moduledefs-plugin:${Versions.millModuledefsVersion}"
+    // ivy"com.lihaoyi:::scalac-mill-moduledefs-plugin:${Versions.millModuledefsVersion}"
   )
 
   override def scalacOptions: T[Seq[String]] = T {
     super.scalacOptions() ++
       Seq(
-        "-Xplugin:" + lineNumberPluginClasspath().map(_.path).mkString(","),
+        // "-Xplugin:" + lineNumberPluginClasspath().map(_.path).mkString(","),
         "-deprecation",
         // Make sure we abort of the plugin is not found, to ensure any
         // classpath/plugin-discovery issues are surfaced early rather than
         // after hours of debugging
-        "-Xplugin-require:mill-linenumber-plugin"
+        // "-Xplugin-require:mill-linenumber-plugin"
       )
   }
 
@@ -252,7 +253,8 @@ class MillBuildRootModule()(implicit
     super.scalacPluginClasspath() ++ lineNumberPluginClasspath()
 
   def lineNumberPluginClasspath: T[Agg[PathRef]] = T {
-    millProjectModule("mill-runner-linenumbers", repositoriesTask())
+    // millProjectModule("mill-runner-linenumbers", repositoriesTask())
+    Agg.empty
   }
 
   /** Used in BSP IntelliJ, which can only work with directories */
