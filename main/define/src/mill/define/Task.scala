@@ -235,13 +235,14 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * signature for you source files/folders and decides whether or not downstream
    * [[TargetImpl]]s need to be invalidated and re-computed.
    */
-  def sources(values: Result[os.Path]*)(implicit ctx: mill.define.Ctx): Target[Seq[PathRef]] =
-    ??? // macro Internal.sourcesImpl1
+  inline def sources(inline values: Result[os.Path]*)(implicit
+      ctx: mill.define.Ctx
+  ): Target[Seq[PathRef]] = ${ Internal.sourcesImpl1('values)('ctx, 'this) }
 
   inline def sources(inline values: Result[Seq[PathRef]])(implicit
       ctx: mill.define.Ctx
   ): Target[Seq[PathRef]] =
-    ${ Internal.sourcesImpl2('this, 'values)('ctx) }
+    ${ Internal.sourcesImpl2('values)('ctx, 'this) }
 
   /**
    * Similar to [[Source]], but only for a single source file or folder. Defined
@@ -380,8 +381,6 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
         ctx: Expr[mill.define.Ctx],
         caller: Expr[Applicative.Applyer[Task, Task, Result, mill.api.Ctx]]
     )(using Quotes): Expr[Target[T]] = {
-      import quotes.reflect.*
-
       val taskIsPrivate = isPrivateTargetOption()
 
       val lhs =
@@ -441,35 +440,39 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
       ???
     }
 
-    def sourcesImpl1(c: Context)(values: c.Expr[Result[os.Path]]*)(ctx: c.Expr[mill.define.Ctx])
-        : c.Expr[Target[Seq[PathRef]]] = {
-      // import c.universe._
-      // val wrapped =
-      //   for (value <- values.toList)
-      //     yield Applicative.impl0[Task, PathRef, mill.api.Ctx](c)(
-      //       reify(value.splice.map(PathRef(_))).tree
-      //     ).tree
+    def sourcesImpl1(using Quotes)(values: Expr[Seq[Result[os.Path]]])(
+        ctx: Expr[mill.define.Ctx],
+        caller: Expr[Applicative.Applyer[Task, Task, Result, mill.api.Ctx]]
+    ): Expr[Target[Seq[PathRef]]] = {
 
-      // val taskIsPrivate = isPrivateTargetOption(c)
+      val unwrapped = Varargs.unapply(values).get
 
-      // mill.moduledefs.Cacher.impl0[SourcesImpl](c)(
-      //   reify(
-      //     new SourcesImpl(
-      //       Target.sequence(c.Expr[List[Task[PathRef]]](q"_root_.scala.List(..$wrapped)").splice),
-      //       ctx.splice,
-      //       taskIsPrivate.splice
-      //     )
-      //   )
-      // )
-      ???
+      val wrapped =
+        for (value <- unwrapped.toList)
+          yield Applicative.impl[Task, Task, Result, PathRef, mill.api.Ctx](
+            caller,
+            '{ $value.map(PathRef(_)) }
+          )
+
+      val taskIsPrivate = isPrivateTargetOption()
+
+      mill.moduledefs.Cacher.impl0[SourcesImpl](
+        '{
+          new SourcesImpl(
+            Target.sequence(List(${ Varargs(wrapped) }*)),
+            $ctx,
+            $taskIsPrivate
+          )
+        }
+      )
     }
 
     def sourcesImpl2(using Quotes)(
-        caller: Expr[Applicative.Applyer[Task, Task, Result, mill.api.Ctx]],
         values: Expr[Result[Seq[PathRef]]]
-    )(ctx: Expr[mill.define.Ctx]): Expr[Target[Seq[PathRef]]] = {
-      import quotes.reflect.*
-
+    )(
+        ctx: Expr[mill.define.Ctx],
+        caller: Expr[Applicative.Applyer[Task, Task, Result, mill.api.Ctx]]
+    ): Expr[Target[Seq[PathRef]]] = {
       val taskIsPrivate = isPrivateTargetOption()
 
       val lhs = Applicative.impl[Task, Task, Result, Seq[PathRef], mill.api.Ctx](caller, values)
@@ -531,8 +534,6 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
         ctx: Expr[mill.define.Ctx],
         caller: Expr[Applicative.Applyer[Task, Task, Result, mill.api.Ctx]]
     ): Expr[Target[T]] = {
-      import quotes.reflect.*
-
       val taskIsPrivate = isPrivateTargetOption()
 
       val lhs = Applicative.impl[Task, Task, Result, T, mill.api.Ctx](caller, value)
