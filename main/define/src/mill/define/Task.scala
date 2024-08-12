@@ -209,8 +209,8 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
   ): Target[T] =
     ${ Internal.targetResultImpl[T]('t)('rw, 'ctx, 'this) }
 
-  def apply[T](t: Task[T])(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
-    ??? // macro Internal.targetTaskImpl[T]
+  inline def apply[T](inline t: Task[T])(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
+    ${ Internal.targetTaskImpl[T]('t)('rw, 'ctx) }
 
   /**
    * [[PersistentImpl]] are a flavor of [[TargetImpl]], normally defined using
@@ -429,21 +429,18 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
         rw: Expr[RW[T]],
         ctx: Expr[mill.define.Ctx]
     ): Expr[Target[T]] = {
-      // import c.universe._
+      val taskIsPrivate = isPrivateTargetOption()
 
-      // val taskIsPrivate = isPrivateTargetOption(c)
-
-      // mill.moduledefs.Cacher.impl0[Target[T]](c)(
-      //   '{
-      //     new TargetImpl[T](
-      //       t.splice,
-      //       ctx.splice,
-      //       rw.splice,
-      //       taskIsPrivate.splice
-      //     )
-      //   }
-      // )
-      ???
+      mill.moduledefs.Cacher.impl0[Target[T]](
+        '{
+          new TargetImpl[T](
+            $t,
+            $ctx,
+            $rw,
+            $taskIsPrivate
+          )
+        }
+      )
     }
 
     def sourcesImpl1(using Quotes)(values: Expr[Seq[Result[os.Path]]])(
