@@ -90,7 +90,6 @@ trait MainModule extends BaseModule0 {
         resolvedStrings.sorted.foreach(Target.log.outputStream.println)
         Result.Success(resolvedStrings)
     }
-    // ??? : Result[List[String]]
   }
 
   /**

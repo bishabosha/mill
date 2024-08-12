@@ -26,7 +26,7 @@ object Applicative {
     def apply[T](t: M[T]): T
   }
   object ApplyHandler {
-    // @compileTimeOnly("Target#apply() can only be used with a T{...} block")
+    @compileTimeOnly("Target#apply() can only be used with a T{...} block")
     implicit def defaultApplyHandler[M[+_]]: ApplyHandler[M] = ???
   }
   trait Applyable[M[+_], +T] {

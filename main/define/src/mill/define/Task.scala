@@ -200,16 +200,22 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * return type is JSON serializable. In return they automatically caches their
    * return value to disk, only re-computing if upstream [[Task]]s change
    */
-  implicit inline def apply[T](inline t: T)(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
+  implicit inline def apply[T](inline t: T)(implicit
+      inline rw: RW[T],
+      inline ctx: mill.define.Ctx
+  ): Target[T] =
     ${ Internal.targetImpl[T]('t)('rw, 'ctx, 'this) }
 
   implicit inline def apply[T](inline t: Result[T])(implicit
-      rw: RW[T],
-      ctx: mill.define.Ctx
+      inline rw: RW[T],
+      inline ctx: mill.define.Ctx
   ): Target[T] =
     ${ Internal.targetResultImpl[T]('t)('rw, 'ctx, 'this) }
 
-  inline def apply[T](inline t: Task[T])(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
+  inline def apply[T](inline t: Task[T])(implicit
+      inline rw: RW[T],
+      inline ctx: mill.define.Ctx
+  ): Target[T] =
     ${ Internal.targetTaskImpl[T]('t)('rw, 'ctx) }
 
   /**
@@ -226,8 +232,8 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * Violating that invariant can result in confusing mis-behaviors
    */
   inline def persistent[T](inline t: Result[T])(implicit
-      rw: RW[T],
-      ctx: mill.define.Ctx
+      inline rw: RW[T],
+      inline ctx: mill.define.Ctx
   ): Target[T] =
     ${ Internal.persistentImpl[T]('t)('rw, 'ctx, 'this) }
 
@@ -242,11 +248,11 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * [[TargetImpl]]s need to be invalidated and re-computed.
    */
   inline def sources(inline values: Result[os.Path]*)(implicit
-      ctx: mill.define.Ctx
+      inline ctx: mill.define.Ctx
   ): Target[Seq[PathRef]] = ${ Internal.sourcesImpl1('values)('ctx, 'this) }
 
   inline def sources(inline values: Result[Seq[PathRef]])(implicit
-      ctx: mill.define.Ctx
+      inline ctx: mill.define.Ctx
   ): Target[Seq[PathRef]] =
     ${ Internal.sourcesImpl2('values)('ctx, 'this) }
 
@@ -254,12 +260,16 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * Similar to [[Source]], but only for a single source file or folder. Defined
    * using `T.source`.
    */
-  def source(value: Result[os.Path])(implicit ctx: mill.define.Ctx): Target[PathRef] =
-    ??? // macro Internal.sourceImpl1
+  inline def source(inline value: Result[os.Path])(implicit
+      inline ctx: mill.define.Ctx
+  ): Target[PathRef] =
+    ${ Internal.sourceImpl1('value)('ctx, 'this) }
 
   @annotation.targetName("source2")
-  def source(value: Result[PathRef])(implicit ctx: mill.define.Ctx): Target[PathRef] =
-    ??? // macro Internal.sourceImpl2
+  inline def source(inline value: Result[PathRef])(implicit
+      inline ctx: mill.define.Ctx
+  ): Target[PathRef] =
+    ${ Internal.sourceImpl2('value)('ctx, 'this) }
 
   /**
    * [[InputImpl]]s, normally defined using `T.input`, are [[NamedTask]]s that
@@ -278,8 +288,8 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * used for detecting changes to source files.
    */
   inline def input[T](inline value: Result[T])(implicit
-      w: upickle.default.Writer[T],
-      ctx: mill.define.Ctx
+      inline w: upickle.default.Writer[T],
+      inline ctx: mill.define.Ctx
   ): Target[T] =
     ${ Internal.inputImpl[T]('value)('w, 'ctx, 'this) }
 
@@ -290,17 +300,17 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * take arguments that are automatically converted to command-line
    * arguments, as long as an implicit [[mainargs.TokensReader]] is available.
    */
-  def command[T](t: Task[T])(implicit
-      ctx: mill.define.Ctx,
-      w: W[T],
-      cls: EnclosingClass
-  ): Command[T] = ??? // macro Internal.commandFromTask[T]
+  inline def command[T](inline t: Task[T])(implicit
+      inline ctx: mill.define.Ctx,
+      inline w: W[T],
+      inline cls: EnclosingClass
+  ): Command[T] = ${ Internal.commandFromTask[T]('t)('ctx, 'w, 'cls) }
 
-  def command[T](t: Result[T])(implicit
-      w: W[T],
-      ctx: mill.define.Ctx,
-      cls: EnclosingClass
-  ): Command[T] = ??? // macro Internal.commandImpl[T]
+  inline def command[T](inline t: Result[T])(implicit
+      inline w: W[T],
+      inline ctx: mill.define.Ctx,
+      inline cls: EnclosingClass
+  ): Command[T] = ${ Internal.commandImpl[T]('t)('w, 'ctx, 'cls, 'this) }
 
   /**
    * [[Worker]] is a [[NamedTask]] that lives entirely in-memory, defined using
@@ -316,10 +326,10 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * responsibility of ensuring the implementation is idempotent regardless of
    * what in-memory state the worker may have.
    */
-  def worker[T](t: Task[T])(implicit ctx: mill.define.Ctx): Worker[T] =
-    ??? // macro Internal.workerImpl1[T]
+  inline def worker[T](inline t: Task[T])(implicit inline ctx: mill.define.Ctx): Worker[T] =
+    ${ Internal.workerImpl1[T]('t)('ctx) }
 
-  inline def worker[T](inline t: Result[T])(implicit ctx: mill.define.Ctx): Worker[T] =
+  inline def worker[T](inline t: Result[T])(implicit inline ctx: mill.define.Ctx): Worker[T] =
     ${ Internal.workerImpl2[T]('t)('ctx, 'this) }
 
   /**
@@ -493,45 +503,47 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
 
     def sourceImpl1(using
         Quotes
-    )(value: Expr[Result[os.Path]])(ctx: Expr[mill.define.Ctx]): Expr[Target[PathRef]] = {
-      // import c.universe._
+    )(value: Expr[Result[os.Path]])(
+        ctx: Expr[mill.define.Ctx],
+        caller: Expr[Applicative.Applyer[Task, Task, Result, mill.api.Ctx]]
+    ): Expr[Target[PathRef]] = {
+      val wrapped =
+        Applicative.impl[Task, Task, Result, PathRef, mill.api.Ctx](
+          caller,
+          '{ $value.map(PathRef(_)) }
+        )
 
-      // val wrapped =
-      //   Applicative.impl0[Task, PathRef, mill.api.Ctx](c)(
-      //     '{value.splice.map(PathRef(_))).tree
-      //   )
+      val taskIsPrivate = isPrivateTargetOption()
 
-      // val taskIsPrivate = isPrivateTargetOption(c)
-
-      // mill.moduledefs.Cacher.impl0[Target[PathRef]](c)(
-      //   '{
-      //     new SourceImpl(
-      //       wrapped.splice,
-      //       ctx.splice,
-      //       taskIsPrivate.splice
-      //     )
-      //   }
-      // )
-      ???
+      mill.moduledefs.Cacher.impl0[Target[PathRef]](
+        '{
+          new SourceImpl(
+            $wrapped,
+            $ctx,
+            $taskIsPrivate
+          )
+        }
+      )
     }
 
     def sourceImpl2(using
         Quotes
-    )(value: Expr[Result[PathRef]])(ctx: Expr[mill.define.Ctx]): Expr[Target[PathRef]] = {
-      // import c.universe._
+    )(value: Expr[Result[PathRef]])(
+        ctx: Expr[mill.define.Ctx],
+        caller: Expr[Applicative.Applyer[Task, Task, Result, mill.api.Ctx]]
+    ): Expr[Target[PathRef]] = {
+      val taskIsPrivate = isPrivateTargetOption()
 
-      // val taskIsPrivate = isPrivateTargetOption(c)
-
-      // mill.moduledefs.Cacher.impl0[Target[PathRef]](c)(
-      //   '{
-      //     new SourceImpl(
-      //       Applicative.impl0[Task, PathRef, mill.api.Ctx](c)(value.tree).splice,
-      //       ctx.splice,
-      //       taskIsPrivate.splice
-      //     )
-      //   }
-      // )
-      ???
+      val lhs = Applicative.impl[Task, Task, Result, PathRef, mill.api.Ctx](caller, value)
+      mill.moduledefs.Cacher.impl0[Target[PathRef]](
+        '{
+          new SourceImpl(
+            $lhs,
+            $ctx,
+            $taskIsPrivate
+          )
+        }
+      )
     }
 
     def inputImpl[T: Type](using Quotes)(value: Expr[Result[T]])(
@@ -560,56 +572,49 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
         w: Expr[W[T]],
         cls: Expr[EnclosingClass]
     ): Expr[Command[T]] = {
-      // import c.universe._
+      val taskIsPrivate = isPrivateTargetOption()
 
-      // val taskIsPrivate = isPrivateTargetOption(c)
-
-      // '{
-      //   new Command[T](
-      //     t.splice,
-      //     ctx.splice,
-      //     w.splice,
-      //     cls.splice.value,
-      //     taskIsPrivate.splice
-      //   }
-      // )
-      ???
+      '{
+        new Command[T](
+          $t,
+          $ctx,
+          $w,
+          $cls.value,
+          $taskIsPrivate
+        )
+      }
     }
 
-    def commandImpl[T: Type](using Quotes)(t: Expr[T])(
+    def commandImpl[T: Type](using Quotes)(t: Expr[Result[T]])(
         w: Expr[W[T]],
         ctx: Expr[mill.define.Ctx],
-        cls: Expr[EnclosingClass]
+        cls: Expr[EnclosingClass],
+        caller: Expr[Applicative.Applyer[Task, Task, Result, mill.api.Ctx]]
     ): Expr[Command[T]] = {
-      // import c.universe._
+      val taskIsPrivate = isPrivateTargetOption()
 
-      // val taskIsPrivate = isPrivateTargetOption(c)
-
-      // '{
-      //   new Command[T](
-      //     Applicative.impl[Task, Task, Result, T, mill.api.Ctx](c)(t).splice,
-      //     ctx.splice,
-      //     w.splice,
-      //     cls.splice.value,
-      //     taskIsPrivate.splice
-      //   }
-      // )
-      ???
+      val lhs = Applicative.impl[Task, Task, Result, T, mill.api.Ctx](caller, t)
+      '{
+        new Command[T](
+          $lhs,
+          $ctx,
+          $w,
+          $cls.value,
+          $taskIsPrivate
+        )
+      }
     }
 
     def workerImpl1[T: Type](using
         Quotes
     )(t: Expr[Task[T]])(ctx: Expr[mill.define.Ctx]): Expr[Worker[T]] = {
-      // import c.universe._
+      val taskIsPrivate = isPrivateTargetOption()
 
-      // val taskIsPrivate = isPrivateTargetOption(c)
-
-      // mill.moduledefs.Cacher.impl0[Worker[T]](
-      //   '{
-      //     new Worker[T](t.splice, ctx.splice, taskIsPrivate.splice)
-      //   }
-      // )
-      ???
+      mill.moduledefs.Cacher.impl0[Worker[T]](
+        '{
+          new Worker[T]($t, $ctx, $taskIsPrivate)
+        }
+      )
     }
 
     def workerImpl2[T: Type](using
