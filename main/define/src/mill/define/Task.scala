@@ -270,11 +270,11 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
    * The most common case of [[InputImpl]] is [[SourceImpl]] and [[SourcesImpl]],
    * used for detecting changes to source files.
    */
-  def input[T](value: Result[T])(implicit
+  inline def input[T](inline value: Result[T])(implicit
       w: upickle.default.Writer[T],
       ctx: mill.define.Ctx
   ): Target[T] =
-    ??? // macro Internal.inputImpl[T]
+    ${ Internal.inputImpl[T]('value)('w, 'ctx, 'this) }
 
   /**
    * [[Command]]s are only [[NamedTask]]s defined using
@@ -526,25 +526,27 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
       ???
     }
 
-    def inputImpl[T: c.WeakTypeTag](c: Context)(value: c.Expr[T])(
-        w: c.Expr[upickle.default.Writer[T]],
-        ctx: c.Expr[mill.define.Ctx]
-    ): c.Expr[Target[T]] = {
-      // import c.universe._
+    def inputImpl[T: Type](using Quotes)(value: Expr[Result[T]])(
+        w: Expr[upickle.default.Writer[T]],
+        ctx: Expr[mill.define.Ctx],
+        caller: Expr[Applicative.Applyer[Task, Task, Result, mill.api.Ctx]]
+    ): Expr[Target[T]] = {
+      import quotes.reflect.*
 
-      // val taskIsPrivate = isPrivateTargetOption(c)
+      val taskIsPrivate = isPrivateTargetOption()
 
-      // mill.moduledefs.Cacher.impl0[InputImpl[T]](c)(
-      //   reify(
-      //     new InputImpl[T](
-      //       Applicative.impl[Task, T, mill.api.Ctx](c)(value).splice,
-      //       ctx.splice,
-      //       w.splice,
-      //       taskIsPrivate.splice
-      //     )
-      //   )
-      // )
-      ???
+      val lhs = Applicative.impl[Task, Task, Result, T, mill.api.Ctx](caller, value)
+
+      mill.moduledefs.Cacher.impl0[InputImpl[T]](
+        '{
+          new InputImpl[T](
+            $lhs,
+            $ctx,
+            $w,
+            $taskIsPrivate
+          )
+        }
+      )
     }
 
     def commandFromTask[T: c.WeakTypeTag](c: Context)(t: c.Expr[Task[T]])(
