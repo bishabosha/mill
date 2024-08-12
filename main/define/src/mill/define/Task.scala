@@ -203,8 +203,11 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
   implicit inline def apply[T](inline t: T)(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
     ${ Internal.targetImpl[T]('t)('rw, 'ctx, 'this) }
 
-  implicit def apply[T](t: Result[T])(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
-    ??? // macro Internal.targetResultImpl[T]
+  implicit inline def apply[T](inline t: Result[T])(implicit
+      rw: RW[T],
+      ctx: mill.define.Ctx
+  ): Target[T] =
+    ${ Internal.targetResultImpl[T]('t)('rw, 'ctx, 'this) }
 
   def apply[T](t: Task[T])(implicit rw: RW[T], ctx: mill.define.Ctx): Target[T] =
     ??? // macro Internal.targetTaskImpl[T]
@@ -398,25 +401,25 @@ object Target extends Applicative.Applyer[Task, Task, Result, mill.api.Ctx] {
       )
     }
 
-    def targetResultImpl[T: c.WeakTypeTag](c: Context)(t: c.Expr[Result[T]])(
-        rw: c.Expr[RW[T]],
-        ctx: c.Expr[mill.define.Ctx]
-    ): c.Expr[Target[T]] = {
-      // import c.universe._
+    def targetResultImpl[T: Type](using Quotes)(t: Expr[Result[T]])(
+        rw: Expr[RW[T]],
+        ctx: Expr[mill.define.Ctx],
+        caller: Expr[Applicative.Applyer[Task, Task, Result, mill.api.Ctx]]
+    ): Expr[Target[T]] = {
+      val taskIsPrivate = isPrivateTargetOption()
 
-      // val taskIsPrivate = isPrivateTargetOption(c)
+      val lhs = Applicative.impl[Task, Task, Result, T, mill.api.Ctx](caller, t)
 
-      // mill.moduledefs.Cacher.impl0[Target[T]](c)(
-      //   reify(
-      //     new TargetImpl[T](
-      //       Applicative.impl0[Task, T, mill.api.Ctx](c)(t.tree).splice,
-      //       ctx.splice,
-      //       rw.splice,
-      //       taskIsPrivate.splice
-      //     )
-      //   )
-      // )
-      ???
+      mill.moduledefs.Cacher.impl0[Target[T]](
+        '{
+          new TargetImpl[T](
+            $lhs,
+            $ctx,
+            $rw,
+            $taskIsPrivate
+          )
+        }
+      )
     }
 
     def targetTaskImpl[T: c.WeakTypeTag](c: Context)(t: c.Expr[Task[T]])(
