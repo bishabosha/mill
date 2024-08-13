@@ -184,7 +184,8 @@ object Discover {
           // import mill.main.TokenReaders.*
           Discover.apply2(Map(${Varargs(mapping)}*))
         }
-      report.warning(s"generated maindata for ${TypeRepr.of[T].show}:\n${expr.asTerm.show}", TypeRepr.of[T].typeSymbol.pos.getOrElse(Position.ofMacroExpansion))
+      // TODO: if needed for debugging, we can re-enable this
+      // report.warning(s"generated maindata for ${TypeRepr.of[T].show}:\n${expr.asTerm.show}", TypeRepr.of[T].typeSymbol.pos.getOrElse(Position.ofMacroExpansion))
       expr
     }
   }
