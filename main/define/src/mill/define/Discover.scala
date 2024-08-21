@@ -61,6 +61,7 @@ object Discover {
       val crossSym = Symbol.requiredClass("mill.define.Cross")
       val crossArg = crossSym.typeMembers.filter(_.isTypeParam).head
       val moduleSym = Symbol.requiredClass("mill.define.Module")
+      val deprecatedSym = Symbol.requiredClass("scala.deprecated")
       def rec(tpe: TypeRepr): Unit = {
         if (seen.add(tpe)) {
           val typeSym = tpe.typeSymbol
@@ -123,7 +124,7 @@ object Discover {
       val mapping = for {
         discoveredModuleType <- seen.toSeq.sortBy(_.typeSymbol.fullName)
         curCls = discoveredModuleType
-        methods = curCls.typeSymbol.methodMembers.filterNot(m => m.isSuperAccessor || m.flags.is(Flags.Synthetic | Flags.Invisible | Flags.Private | Flags.Protected)) // getValsOrMeths(curCls) replaced by equivalent from Scala 3 mainargs
+        methods = curCls.typeSymbol.methodMembers.filterNot(m => m.isSuperAccessor || m.hasAnnotation(deprecatedSym) || m.flags.is(Flags.Synthetic | Flags.Invisible | Flags.Private | Flags.Protected)) // getValsOrMeths(curCls) replaced by equivalent from Scala 3 mainargs
         overridesRoutes = {
           assertParamListCounts(
             curCls,
