@@ -403,11 +403,11 @@ trait MillScalaModule extends ScalaModule with MillJavaModule with ScalafixModul
   def scalacPluginIvyDeps =
     super.scalacPluginIvyDeps() ++
       Agg.when(!scalaVersion().startsWith("3."))(Deps.acyclic) ++
-      Agg.when(scalaVersion().startsWith("2.13."))(Deps.millModuledefsPlugin)
+      Agg(Deps.millModuledefsPlugin)
 
   def mandatoryIvyDeps =
     super.mandatoryIvyDeps() ++
-      Agg.when(scalaVersion().startsWith("2.13."))(Deps.millModuledefs)
+      Agg(Deps.millModuledefs)
 
   /** Default tests module. */
   lazy val test: MillScalaTests = new MillScalaTests {}

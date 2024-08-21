@@ -91,8 +91,8 @@ class MillBuildRootModule()(implicit
     Agg.from(
       MillIvy.processMillIvyDepSignature(parseBuildFiles().ivyDeps)
         .map(mill.scalalib.Dep.parse)
-    ) /*++
-      Agg(ivy"com.lihaoyi::mill-moduledefs:${Versions.millModuledefsVersion}")*/
+    ) ++
+      Agg(ivy"com.lihaoyi::mill-moduledefs:${Versions.millModuledefsVersion}")
   }
 
   override def runIvyDeps = T {
@@ -234,7 +234,7 @@ class MillBuildRootModule()(implicit
   }
 
   override def scalacPluginIvyDeps: T[Agg[Dep]] = Agg(
-    // ivy"com.lihaoyi:::scalac-mill-moduledefs-plugin:${Versions.millModuledefsVersion}"
+    ivy"com.lihaoyi:::scalac-mill-moduledefs-plugin:${Versions.millModuledefsVersion}"
   )
 
   override def scalacOptions: T[Seq[String]] = T {

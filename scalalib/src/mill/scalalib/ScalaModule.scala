@@ -175,10 +175,10 @@ trait ScalaModule extends JavaModule with TestModule.ScalaModuleBase { outer =>
    */
   private def enablePluginScalacOptions: Target[Seq[String]] = T {
 
-    val resolvedJars = defaultResolver().resolveDeps(
+    val resolvedJars = defaultResolver().resolveDeps0(
       scalacPluginIvyDeps().map(_.exclude("*" -> "*"))
     )
-    resolvedJars.iterator.map(jar => s"-Xplugin:${jar.path}").toSeq
+    resolvedJars.map(_.iterator.map(jar => s"-Xplugin:${jar.path}").toSeq)
   }
 
   /**
