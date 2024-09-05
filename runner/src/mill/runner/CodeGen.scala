@@ -128,7 +128,7 @@ object CodeGen {
     )
     val segments = scriptFolderPath.relativeTo(projectRoot).segments
     val instrument = new ObjectDataInstrument(scriptCode)
-    fastparse.parse(scriptCode, Parsers.CompilationUnit(_), instrument = instrument)
+    fastparse.parse(scriptCode, Parsers.CompilationUnit(using _), instrument = instrument)
     val objectData = instrument.objectData
 
     val expectedParent =
@@ -186,6 +186,7 @@ object CodeGen {
       millTopLevelProjectRoot: os.Path
   ): String = {
     s"""import _root_.mill.runner.MillBuildRootModule
+       |import _root_.mill.main.TokenReaders.given
        |@_root_.scala.annotation.nowarn
        |object MillMiscInfo extends MillBuildRootModule.MillMiscInfo(
        |  ${enclosingClasspath.map(p => literalize(p.toString))},

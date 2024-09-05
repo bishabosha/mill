@@ -73,8 +73,8 @@ object Deps {
     val scalajsEnvNodejs = ivy"org.scala-js::scalajs-env-nodejs:1.4.0".withDottyCompat(scalaVersion)
     val scalajsEnvPhantomjs = ivy"org.scala-js::scalajs-env-phantomjs:1.0.0".withDottyCompat(scalaVersion)
     val scalajsEnvSelenium = ivy"org.scala-js::scalajs-env-selenium:1.1.1".withDottyCompat(scalaVersion)
-    val scalajsSbtTestAdapter = ivy"org.scala-js::scalajs-sbt-test-adapter:${scalaJsVersion}".withDottyCompat(scalaVersion)
-    val scalajsLinker = ivy"org.scala-js::scalajs-linker:${scalaJsVersion}".withDottyCompat(scalaVersion)
+    val scalajsSbtTestAdapter = ivy"org.scala-js:scalajs-sbt-test-adapter_2.13:${scalaJsVersion}"
+    val scalajsLinker = ivy"org.scala-js:scalajs-linker_2.13:${scalaJsVersion}"
     val scalajsImportMap = ivy"com.armanbilge::scalajs-importmap:0.1.1".withDottyCompat(scalaVersion)
   }
 
