@@ -164,7 +164,10 @@ object Discover {
         // by wrapping the `overridesRoutes` in a lambda function we kind of work around
         // the problem of generating a *huge* macro method body that finally exceeds the
         // JVM's maximum allowed method size
-        val overridesLambda = '{(() => (${Expr(names)}, $mainDatas))()}
+        val overridesLambda = '{
+          def pair() = (${Expr(names)}, $mainDatas)
+          pair()
+        }
         val lhs = Ref(defn.Predef_classOf).appliedToType(discoveredModuleType.widen).asExprOf[Class[?]]
         '{$lhs -> $overridesLambda}
       }
@@ -176,7 +179,7 @@ object Discover {
           Discover.apply2(Map(${Varargs(mapping)}*))
         }
       // TODO: if needed for debugging, we can re-enable this
-      // report.warning(s"generated maindata for ${TypeRepr.of[T].show}:\n${expr.asTerm.show}", TypeRepr.of[T].typeSymbol.pos.getOrElse(Position.ofMacroExpansion))
+      // report.warning(s"generated discovery for ${TypeRepr.of[T].show}:\n${expr.asTerm.show}", TypeRepr.of[T].typeSymbol.pos.getOrElse(Position.ofMacroExpansion))
       expr
     }
   }
