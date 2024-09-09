@@ -209,7 +209,7 @@ abstract class MillBuildRootModule()(implicit
   override def allSourceFiles: T[Seq[PathRef]] = Task {
     val candidates = Lib.findSourceFiles(allSources(), Seq("scala", "java") ++ buildFileExtensions)
     // We need to unlist those files, which we replaced by generating wrapper scripts
-    val filesToExclude = Lib.findSourceFiles(scriptSources(), buildFileExtensions)
+    val filesToExclude = Lib.findSourceFiles(scriptSources(), buildFileExtensions.toIndexedSeq)
     candidates.filterNot(filesToExclude.contains).map(PathRef(_))
   }
 
@@ -234,7 +234,7 @@ abstract class MillBuildRootModule()(implicit
   }
 
   override def unmanagedClasspath: T[Agg[PathRef]] = Task {
-    enclosingClasspath() ++ lineNumberPluginClasspath()
+    enclosingClasspath()
   }
 
   override def scalacPluginIvyDeps: T[Agg[Dep]] = Agg(
@@ -251,14 +251,6 @@ abstract class MillBuildRootModule()(implicit
         // after hours of debugging
         // "-Xplugin-require:mill-linenumber-plugin"
       )
-  }
-
-  override def scalacPluginClasspath: T[Agg[PathRef]] =
-    super.scalacPluginClasspath() ++ lineNumberPluginClasspath()
-
-  def lineNumberPluginClasspath: T[Agg[PathRef]] = Task {
-    // millProjectModule("mill-runner-linenumbers", repositoriesTask())
-    Agg.empty
   }
 
   /** Used in BSP IntelliJ, which can only work with directories */
