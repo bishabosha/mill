@@ -136,7 +136,8 @@ object `package` extends RootModule with build.MillStableScalaModule with BuildI
             build.Deps.mainargs,
             build.Deps.requests,
             build.Deps.osLib,
-            build.Deps.upickle
+            build.Deps.upickle,
+            build.Deps.sourcecode
           )
         }
       }
