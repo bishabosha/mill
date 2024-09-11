@@ -140,6 +140,22 @@ object LocalSummary {
       st.Desc.read(descriptor)
     )
 
+    // HACK: we skip any constants that get passed to `sourcecode.Line()`,
+    // because we use that extensively in defining Mill targets but it is
+    // generally not something we want to affect the output of a build
+//    val sourcecodeLineCall = st.MethodCall(
+//      JCls.fromSlashed("sourcecode/Line"),
+//      InvokeType.Special,
+//      "<init>",
+//      st.Desc.read("(I)V")
+//    )
+    val sourcecodeLineCall = st.MethodCall(
+      JCls.fromSlashed("sourcecode/Line$"),
+      InvokeType.Virtual,
+      "apply",
+      st.Desc.read("(I)Lsourcecode/Line;")
+    )
+
     val insnSigs: mutable.ArrayBuffer[Int] = collection.mutable.ArrayBuffer.empty[Int]
 
     var insnHash = 0
@@ -283,15 +299,6 @@ object LocalSummary {
         st.Desc.read(descriptor)
       )
 
-      // HACK: we skip any constants that get passed to `sourcecode.Line()`,
-      // because we use that extensively in definig Mill targets but it is
-      // generally not something we want to affect the output of a build
-      val sourcecodeLineCall = st.MethodCall(
-        JCls.fromSlashed("sourcecode/Line"),
-        InvokeType.Special,
-        "<init>",
-        st.Desc.read("(I)V")
-      )
       if (call == sourcecodeLineCall) discardPreviousInsn()
 
       hash(opcode)

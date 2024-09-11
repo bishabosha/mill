@@ -21,7 +21,9 @@ object CodeSigHelloTests extends IntegrationTestSuite {
       modifyFile(workspacePath / "build.mill", _.replace("running foo", "running foo2"))
       val mangledFoo = eval("foo")
 
-      assert(mangledFoo.out.linesIterator.toSeq == Seq("running foo2", "running helperFoo"))
+      val out1 = mangledFoo.out.linesIterator.toSeq
+      if (out1 == Seq("running foo2", "running helperFoo")) {}
+      else throw new Exception(s"Unexpected output: $out1")
 
       val cached2 = eval("foo")
       assert(cached2.out == "")

@@ -9,7 +9,7 @@ object Hello {
     def head: A
     def tail: TestList[A]
 
-    def foreach[U](f: A => U) {
+    def foreach[U](f: A => U): Unit = {
       var these = this
       while (!these.isEmpty) {
         f(these.head)
