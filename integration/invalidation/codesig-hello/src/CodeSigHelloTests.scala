@@ -22,8 +22,7 @@ object CodeSigHelloTests extends IntegrationTestSuite {
       val mangledFoo = eval("foo")
 
       val out1 = mangledFoo.out.linesIterator.toSeq
-      if (out1 == Seq("running foo2", "running helperFoo")) {}
-      else throw new Exception(s"Unexpected output: $out1")
+      assert(out1 == Seq("running foo2", "running helperFoo"))
 
       val cached2 = eval("foo")
       assert(cached2.out == "")
