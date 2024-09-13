@@ -790,7 +790,7 @@ object ZincWorkerImpl {
       val base = problem0.message().trim
 
       val normCode = {
-        problem0.diagnosticCode().map({ inner =>
+        problem0.diagnosticCode().filter(_.code() != "-1").map({ inner =>
           val prefix = s"[E${inner.code()}] "
           inner.explanation().map(e =>
             s"$prefix$e: "
