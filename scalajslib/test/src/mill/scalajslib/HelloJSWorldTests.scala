@@ -50,7 +50,7 @@ object HelloJSWorldTests extends TestSuite {
       )
 
       object `test-utest` extends ScalaJSTests with TestModule.Utest {
-        override def sources = Task.Sources { millSourcePath / "src/utest" }
+        override def sources = Task.Sources { this.millSourcePath / "src/utest" }
         val utestVersion = if (ZincWorkerUtil.isScala3(crossScalaVersion)) "0.7.7" else "0.7.5"
         override def ivyDeps = Agg(
           ivy"com.lihaoyi::utest::$utestVersion"
@@ -58,7 +58,7 @@ object HelloJSWorldTests extends TestSuite {
       }
 
       object `test-scalatest` extends ScalaJSTests with TestModule.ScalaTest {
-        override def sources = Task.Sources { millSourcePath / "src/scalatest" }
+        override def sources = Task.Sources { this.millSourcePath / "src/scalatest" }
         override def ivyDeps = Agg(
           ivy"org.scalatest::scalatest::3.1.2"
         )
@@ -74,7 +74,10 @@ object HelloJSWorldTests extends TestSuite {
       object test extends ScalaJSTests with TestModule.Utest
     }
 
-    override lazy val millDiscover = Discover[this.type]
+    override lazy val millDiscover = {
+      import mill.main.TokenReaders.given
+      Discover[this.type]
+    }
   }
 
   val millSourcePath = os.Path(sys.env("MILL_TEST_RESOURCE_FOLDER")) / "hello-js-world"
