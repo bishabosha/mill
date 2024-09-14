@@ -14,7 +14,7 @@ private[playlib] trait Version extends Module {
 
   private[playlib] def playOrganization: T[String] = T.task {
     if (playVersion().startsWith("2.")) "com.typesafe.play" else "org.playframework"
-  }
+  }()
 
   private[playlib] def component(id: String) = T.task {
     ivy"${playOrganization()}::$id::${playVersion()}"
