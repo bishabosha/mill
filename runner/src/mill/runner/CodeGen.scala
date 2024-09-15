@@ -15,7 +15,8 @@ object CodeGen {
       allScriptCode: Map[os.Path, String],
       targetDest: os.Path,
       enclosingClasspath: Seq[os.Path],
-      millTopLevelProjectRoot: os.Path
+      millTopLevelProjectRoot: os.Path,
+      scalaVersion: String,
   ): Unit = {
     for (scriptSource <- scriptSources) {
       // pprint.log(scriptSource)
@@ -101,7 +102,8 @@ object CodeGen {
             pkgLine,
             aliasImports,
             scriptCode,
-            markerComment
+            markerComment,
+            scalaVersion
           )
         }
 
@@ -119,12 +121,14 @@ object CodeGen {
       pkgLine: String,
       aliasImports: String,
       scriptCode: String,
-      markerComment: String
+      markerComment: String,
+      scalaVersion: String
   ) = {
     val prelude = topBuildPrelude(
       scriptFolderPath,
       enclosingClasspath,
-      millTopLevelProjectRoot
+      millTopLevelProjectRoot,
+      scalaVersion
     )
     val segments = scriptFolderPath.relativeTo(projectRoot).segments
     val instrument = new ObjectDataInstrument(scriptCode)
@@ -183,10 +187,11 @@ object CodeGen {
   def topBuildPrelude(
       scriptFolderPath: os.Path,
       enclosingClasspath: Seq[os.Path],
-      millTopLevelProjectRoot: os.Path
+      millTopLevelProjectRoot: os.Path,
+      scalaVersion: String
   ): String = {
     s"""import _root_.mill.runner.MillBuildRootModule
-       |import _root_.mill.main.TokenReaders.given
+       |${if scalaVersion.startsWith("3.") then "import _root_.mill.main.TokenReaders.given" else ""}
        |@_root_.scala.annotation.nowarn
        |object MillMiscInfo extends MillBuildRootModule.MillMiscInfo(
        |  ${enclosingClasspath.map(p => literalize(p.toString))},

@@ -120,7 +120,8 @@ class MillBuildRootModule()(implicit
         parsed.seenScripts,
         T.dest,
         millBuildRootModuleInfo.enclosingClasspath,
-        millBuildRootModuleInfo.topLevelProjectRoot
+        millBuildRootModuleInfo.topLevelProjectRoot,
+        scalaVersion(),
       )
       Result.Success(Seq(PathRef(T.dest)))
     }
@@ -259,6 +260,9 @@ class MillBuildRootModule()(implicit
         // classpath/plugin-discovery issues are surfaced early rather than
         // after hours of debugging
         // "-Xplugin-require:mill-linenumber-plugin"
+      ) ++ (
+        if !scalaVersion().startsWith("3.") then Seq("-Ytasty-reader")
+        else Nil
       )
   }
 
