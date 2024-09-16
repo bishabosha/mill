@@ -3,7 +3,7 @@ package mill.contrib.scoverage
 import coursier.Repository
 import mill._
 import mill.api.{Loose, PathRef, Result}
-import mill.contrib.scoverage.api.ScoverageReportWorkerApi.ReportType
+import mill.contrib.scoverage.api.ScoverageReportWorkerApi2.ReportType
 import mill.main.BuildInfo
 import mill.scalalib.api.ZincWorkerUtil
 import mill.scalalib.{Dep, DepSyntax, JavaModule, ScalaModule}
@@ -126,7 +126,8 @@ trait ScoverageModule extends ScalaModule { outer: ScalaModule =>
     millProjectModule(
       workerArtifact,
       repositoriesTask(),
-      resolveFilter = _.toString.contains(workerArtifact)
+      resolveFilter = _.toString.contains(workerArtifact),
+      artifactSuffix = if (isScov2) "_3" else "_2.13"
     )
   }
 
