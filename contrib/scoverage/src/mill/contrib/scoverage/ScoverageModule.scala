@@ -3,7 +3,7 @@ package mill.contrib.scoverage
 import coursier.Repository
 import mill._
 import mill.api.{Loose, PathRef, Result}
-import mill.contrib.scoverage.api.ScoverageReportWorkerApi.ReportType
+import mill.contrib.scoverage.api.ScoverageReportWorkerApi2.ReportType
 import mill.main.BuildInfo
 import mill.scalalib.api.ZincWorkerUtil
 import mill.scalalib.{Dep, DepSyntax, JavaModule, ScalaModule}
@@ -114,17 +114,23 @@ trait ScoverageModule extends ScalaModule { outer: ScalaModule =>
     val millScalaVersion = BuildInfo.scalaVersion
 
     if (sv.startsWith("1.")) {
+      def clampScalaVersion(): String = {
+        val v = "2.13.8"
+        T.log.outputStream.println(
+          s"Detected an unsupported Scala version (${millScalaVersion}). Using Scala version ${v} to resolve scoverage ${sv} reporting API."
+        )
+        v
+      }
+
       // In Scoverage 1.x, the reporting API is included in the plugin jar
       val scalaVersion = millScalaVersion.split("[.]", 4).toList.take(3) match {
         // Scoverage 1 is not released for Scala > 2.13.8, but we don't need to compiler specific code,
         // only the reporter API, which does not depend on the Compiler API, so using another full Scala version
         // should be safe
         case "2" :: "13" :: c :: _ if Try(c.toInt).getOrElse(0) > 8 =>
-          val v = "2.13.8"
-          T.log.outputStream.println(
-            s"Detected an unsupported Scala version (${millScalaVersion}). Using Scala version ${v} to resolve scoverage ${sv} reporting API."
-          )
-          v
+          clampScalaVersion()
+        case "3" :: _ =>
+          clampScalaVersion()
         case _ => millScalaVersion
       }
       Agg(ivy"org.scoverage:scalac-scoverage-plugin_${scalaVersion}:${sv}")
@@ -159,7 +165,8 @@ trait ScoverageModule extends ScalaModule { outer: ScalaModule =>
     millProjectModule(
       workerArtifact,
       repositoriesTask(),
-      resolveFilter = _.toString.contains(workerArtifact)
+      resolveFilter = _.toString.contains(workerArtifact),
+      artifactSuffix = if (isScov2) "_3" else "_2.13"
     )
   }
 
