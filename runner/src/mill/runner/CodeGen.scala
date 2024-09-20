@@ -184,7 +184,13 @@ object CodeGen {
         s"""$pkgLine
            |$aliasImports
            |$prelude
-           |${topBuildHeader(segments, scriptFolderPath, millTopLevelProjectRoot, childAliases, childSels)}
+           |${topBuildHeader(
+            segments,
+            scriptFolderPath,
+            millTopLevelProjectRoot,
+            childAliases,
+            childSels
+          )}
            |$markerComment
            |$scriptCode
            |}""".stripMargin
@@ -240,11 +246,11 @@ object CodeGen {
     def addChildren(initial: String) =
       if childSels.nonEmpty then
         s"""{
-        |      val childDiscovers: Seq[_root_.mill.define.Discover] = Seq(
-        |        ${childSels.map(child => s"$child.millDiscover").mkString(",\n      ")}
-        |      )
-        |      childDiscovers.foldLeft($initial.value)(_ ++ _.value)
-        |    }""".stripMargin
+           |      val childDiscovers: Seq[_root_.mill.define.Discover] = Seq(
+           |        ${childSels.map(child => s"$child.millDiscover").mkString(",\n      ")}
+           |      )
+           |      childDiscovers.foldLeft($initial.value)(_ ++ _.value)
+           |    }""".stripMargin
       else
         s"""$initial.value""".stripMargin
 
