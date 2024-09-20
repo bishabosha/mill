@@ -257,7 +257,7 @@ abstract class MillBuildRootModule()(implicit
     super.scalacOptions() ++
       Seq(
         // "-Xplugin:" + lineNumberPluginClasspath().map(_.path).mkString(","),
-        "-deprecation",
+        "-deprecation"
         // Make sure we abort of the plugin is not found, to ensure any
         // classpath/plugin-discovery issues are surfaced early rather than
         // after hours of debugging

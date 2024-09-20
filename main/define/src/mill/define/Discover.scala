@@ -106,7 +106,11 @@ object Discover {
       val mapping = for {
         discoveredModuleType <- seen.toSeq.sortBy(_.typeSymbol.fullName)
         curCls = discoveredModuleType
-        methods = curCls.typeSymbol.methodMembers.filterNot(m => m.isSuperAccessor || m.hasAnnotation(deprecatedSym) || m.flags.is(Flags.Synthetic | Flags.Invisible | Flags.Private | Flags.Protected)) // getValsOrMeths(curCls) replaced by equivalent from Scala 3 mainargs
+        methods = curCls.typeSymbol.methodMembers.filterNot(m =>
+          m.isSuperAccessor || m.hasAnnotation(deprecatedSym) || m.flags.is(
+            Flags.Synthetic | Flags.Invisible | Flags.Private | Flags.Protected
+          )
+        ) // getValsOrMeths(curCls) replaced by equivalent from Scala 3 mainargs
         overridesRoutes = {
           assertParamListCounts(
             curCls,
@@ -126,7 +130,7 @@ object Discover {
           Tuple2(
             for {
               m <- sortedMethods(sub = TypeRepr.of[mill.define.NamedTask[?]])
-            } yield m.name,//.decoded // we don't need to decode the name in Scala 3
+            } yield m.name, // .decoded // we don't need to decode the name in Scala 3
             for {
               m <- sortedMethods(sub = TypeRepr.of[mill.define.Command[?]])
             } yield curCls.asType match {
@@ -135,14 +139,22 @@ object Discover {
                   try
                     createMainData[Any, t](
                       m,
-                      m.annotations.find(_.tpe =:= TypeRepr.of[mainargs.main]).getOrElse('{new mainargs.main()}.asTerm),
+                      m.annotations.find(_.tpe =:= TypeRepr.of[mainargs.main]).getOrElse('{
+                        new mainargs.main()
+                      }.asTerm),
                       m.paramSymss
                     ).asExprOf[mainargs.MainData[?, ?]]
                   catch {
                     case NonFatal(e) =>
-                      val (before, Array(after, _*)) = e.getStackTrace().span(e => !(e.getClassName() == "mill.define.Discover$Router$" && e.getMethodName() == "applyImpl")): @unchecked
-                      val trace = (before :+ after).map(_.toString).mkString("trace:\n", "\n", "\n...")
-                      report.errorAndAbort(s"Error generating maindata for ${m.fullName}: ${e}\n$trace", m.pos.getOrElse(Position.ofMacroExpansion))
+                      val (before, Array(after, _*)) = e.getStackTrace().span(e =>
+                        !(e.getClassName() == "mill.define.Discover$Router$" && e.getMethodName() == "applyImpl")
+                      ): @unchecked
+                      val trace =
+                        (before :+ after).map(_.toString).mkString("trace:\n", "\n", "\n...")
+                      report.errorAndAbort(
+                        s"Error generating maindata for ${m.fullName}: ${e}\n$trace",
+                        m.pos.getOrElse(Position.ofMacroExpansion)
+                      )
                   }
                 // report.warning(s"generated maindata for ${m.fullName}:\n${expr.asTerm.show}", m.pos.getOrElse(Position.ofMacroExpansion))
                 expr
@@ -157,18 +169,19 @@ object Discover {
         // the problem of generating a *huge* macro method body that finally exceeds the
         // JVM's maximum allowed method size
         val overridesLambda = '{
-          def pair() = (${Expr(names)}, $mainDatas)
+          def pair() = (${ Expr(names) }, $mainDatas)
           pair()
         }
-        val lhs = Ref(defn.Predef_classOf).appliedToType(discoveredModuleType.widen).asExprOf[Class[?]]
-        '{$lhs -> $overridesLambda}
+        val lhs =
+          Ref(defn.Predef_classOf).appliedToType(discoveredModuleType.widen).asExprOf[Class[?]]
+        '{ $lhs -> $overridesLambda }
       }
 
       val expr: Expr[Discover] =
         '{
           // TODO: we can not import this here, so we have to import at the use site now, or redesign?
           // import mill.main.TokenReaders.*
-          Discover.apply2(Map(${Varargs(mapping)}*))
+          Discover.apply2(Map(${ Varargs(mapping) }*))
         }
       // TODO: if needed for debugging, we can re-enable this
       // report.warning(s"generated discovery for ${TypeRepr.of[T].show}:\n${expr.asTerm.show}", TypeRepr.of[T].typeSymbol.pos.getOrElse(Position.ofMacroExpansion))
