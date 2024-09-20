@@ -137,7 +137,7 @@ object Discover {
           Tuple3(
             for {
               m <- sortedMethods(sub = TypeRepr.of[mill.define.NamedTask[?]])
-            } yield m.name,//.decoded // we don't need to decode the name in Scala 3
+            } yield m.name, // .decoded // we don't need to decode the name in Scala 3
             for {
               m <- sortedMethods(sub = TypeRepr.of[mill.define.Command[?]])
             } yield curCls.asType match {
@@ -146,14 +146,22 @@ object Discover {
                   try
                     createMainData[Any, t](
                       m,
-                      m.annotations.find(_.tpe =:= TypeRepr.of[mainargs.main]).getOrElse('{new mainargs.main()}.asTerm),
+                      m.annotations.find(_.tpe =:= TypeRepr.of[mainargs.main]).getOrElse('{
+                        new mainargs.main()
+                      }.asTerm),
                       m.paramSymss
                     ).asExprOf[mainargs.MainData[?, ?]]
                   catch {
                     case NonFatal(e) =>
-                      val (before, Array(after, _*)) = e.getStackTrace().span(e => !(e.getClassName() == "mill.define.Discover$Router$" && e.getMethodName() == "applyImpl")): @unchecked
-                      val trace = (before :+ after).map(_.toString).mkString("trace:\n", "\n", "\n...")
-                      report.errorAndAbort(s"Error generating maindata for ${m.fullName}: ${e}\n$trace", m.pos.getOrElse(Position.ofMacroExpansion))
+                      val (before, Array(after, _*)) = e.getStackTrace().span(e =>
+                        !(e.getClassName() == "mill.define.Discover$Router$" && e.getMethodName() == "applyImpl")
+                      ): @unchecked
+                      val trace =
+                        (before :+ after).map(_.toString).mkString("trace:\n", "\n", "\n...")
+                      report.errorAndAbort(
+                        s"Error generating maindata for ${m.fullName}: ${e}\n$trace",
+                        m.pos.getOrElse(Position.ofMacroExpansion)
+                      )
                   }
                 // report.warning(s"generated maindata for ${m.fullName}:\n${expr.asTerm.show}", m.pos.getOrElse(Position.ofMacroExpansion))
                 expr
@@ -173,8 +181,9 @@ object Discover {
           def triple() = (${ Expr(names) }, ${ Expr.ofList(mainDataExprs) }, ${ Expr(taskNames) })
           triple()
         }
-        val lhs = Ref(defn.Predef_classOf).appliedToType(discoveredModuleType.widen).asExprOf[Class[?]]
-        '{$lhs -> $overridesLambda}
+        val lhs =
+          Ref(defn.Predef_classOf).appliedToType(discoveredModuleType.widen).asExprOf[Class[?]]
+        '{ $lhs -> $overridesLambda }
       }
 
       val expr: Expr[Discover] =
@@ -182,7 +191,7 @@ object Discover {
           // TODO: we can not import this here, so we have to import at the use site now, or redesign?
           // import mill.main.TokenReaders.*
           // import mill.api.JsonFormatters.*
-          Discover.apply2(Map(${Varargs(mapping)}*))
+          Discover.apply2(Map(${ Varargs(mapping) }*))
         }
       // TODO: if needed for debugging, we can re-enable this
       // report.warning(s"generated discovery for ${TypeRepr.of[T].show}:\n${expr.asTerm.show}", TypeRepr.of[T].typeSymbol.pos.getOrElse(Position.ofMacroExpansion))

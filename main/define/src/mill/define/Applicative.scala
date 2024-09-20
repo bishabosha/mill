@@ -59,14 +59,14 @@ object Applicative {
         override def foldTree(x: Set[Symbol], tree: Tree)(owner: Symbol): Set[Symbol] = tree match
           case tree: Definition => foldOverTree(x + tree.symbol, tree)(owner)
           case tree => foldOverTree(x, tree)(owner)
-    }.foldTree(Set.empty, tree)(Symbol.spliceOwner)
+      }.foldTree(Set.empty, tree)(Symbol.spliceOwner)
 
     def visitAllTrees(tree: Tree)(f: Tree => Unit): Unit =
       new TreeTraverser {
         override def traverseTree(tree: Tree)(owner: Symbol): Unit =
           f(tree)
           traverseTreeChildren(tree)(owner)
-    }.traverseTree(tree)(Symbol.spliceOwner)
+      }.traverseTree(tree)(Symbol.spliceOwner)
 
     val defs = extractDefs(t.asTerm)
 
@@ -86,9 +86,10 @@ object Applicative {
 
         override def transformTerm(tree: Term)(owner: Symbol): Term = tree match
           // case t @ '{$fun.apply()($handler)}
-          case t @ Apply(Apply(sel @ Select(fun, "apply"), Nil), List(handler)) if sel.symbol == targetApplySym =>
+          case t @ Apply(Apply(sel @ Select(fun, "apply"), Nil), List(handler))
+              if sel.symbol == targetApplySym =>
             val localDefs = extractDefs(fun)
-            visitAllTrees(t){ x =>
+            visitAllTrees(t) { x =>
               val sym = x.symbol
               if (sym != Symbol.noSymbol && defs(sym) && !localDefs(sym)) {
                 macroError(
@@ -109,9 +110,10 @@ object Applicative {
                 // val itemsIdent = Ident(itemsSym)
                 // exprs.append(q"$fun")
                 exprs += fun
-                '{$itemsRef(${Expr(exprs.size - 1)}).asInstanceOf[tt]}.asTerm
-          case t if t.symbol.exists
-              && t.symbol.annotations.exists(_.tpe =:= TypeRepr.of[mill.api.Ctx.ImplicitStub]) =>
+                '{ $itemsRef(${ Expr(exprs.size - 1) }).asInstanceOf[tt] }.asTerm
+          case t
+              if t.symbol.exists
+                && t.symbol.annotations.exists(_.tpe =:= TypeRepr.of[mill.api.Ctx.ImplicitStub]) =>
             // val tempIdent = Ident(ctxSym)
             // c.internal.setType(tempIdent, t.tpe)
             // c.internal.setFlag(ctxSym, (1L << 44).asInstanceOf[c.universe.FlagSet])
@@ -130,11 +132,11 @@ object Applicative {
     val (callback, exprsList) = {
       var exprsExpr: Expr[Seq[W[Any]]] | Null = null
       val cb = '{ (items: IndexedSeq[Any], ctx: Ctx) =>
-          ${
-            val (body, exprs) = transformed('items, 'ctx)
-            exprsExpr = exprs
-            body
-          }
+        ${
+          val (body, exprs) = transformed('items, 'ctx)
+          exprsExpr = exprs
+          body
+        }
       }
       (cb, exprsExpr.nn)
     }
