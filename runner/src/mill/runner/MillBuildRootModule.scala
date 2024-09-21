@@ -112,10 +112,10 @@ abstract class MillBuildRootModule()(implicit
   }
 
   def generateScriptSources: T[Seq[PathRef]] = Task {
+    val isScala3 = scalaVersion().startsWith("3.")
     val parsed = parseBuildFiles()
-    if (parsed.errors.nonEmpty) Result.Failure(parsed.errors.mkString("\n"))
+    if (parsed.errors.nonEmpty) Result.Failure(parsed.errors.mkString("Parsing error:\n", "\n", ""))
     else {
-      val isScala3 = scalaVersion().startsWith("3.")
       CodeGen.generateWrappedSources(
         millBuildRootModuleInfo.projectRoot / os.up,
         scriptSources(),

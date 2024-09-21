@@ -86,7 +86,7 @@ object FileImportGraph {
 
       } match {
         case scala.util.Failure(ex) => Left(ex.getClass.getName + " " + ex.getMessage)
-        case scala.util.Success(value) => value
+        case scala.util.Success(value) => value.left.map(e => s"parse error: $e")
       }
       readFileEither match {
         case Left(err) =>
@@ -94,7 +94,7 @@ object FileImportGraph {
           // they can be watched and the build can be re-triggered if the user
           // fixes the parse error
           seenScripts(s) = ""
-          errors.append(err)
+          errors.append(s"Spooky: $err")
 
         case Right(stmts) =>
           val fileImports = mutable.Set.empty[os.Path]

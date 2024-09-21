@@ -1,5 +1,6 @@
 package build
-import mill.*
+import $meta._
+import mill._
 
 enum DayValue:
   case Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
