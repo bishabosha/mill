@@ -530,12 +530,12 @@ class ZincWorkerImpl(
     def mkNewReporter(mapper: (xsbti.Position => xsbti.Position) | Null) = reporter match {
       case None =>
         new ManagedLoggedReporter(10, logger) with RecordingReporter
-          with TransformingReporter(mapper) {}
+          with TransformingReporter(ctx.log.colored, mapper) {}
       case Some(forwarder) =>
         new ManagedLoggedReporter(10, logger)
           with ForwardingReporter(forwarder)
           with RecordingReporter
-          with TransformingReporter(mapper) {}
+          with TransformingReporter(ctx.log.colored, mapper) {}
     }
     val analysisMap0 = upstreamCompileOutput.map(c => c.classes.path -> c.analysisFile).toMap
 
@@ -799,6 +799,7 @@ object ZincWorkerImpl {
   }
 
   private trait TransformingReporter(
+      color: Boolean,
       optPositionMapper: (xsbti.Position => xsbti.Position) | Null
   ) extends xsbti.Reporter {
 
@@ -808,7 +809,7 @@ object ZincWorkerImpl {
       val localMapper = optPositionMapper
       val problem = {
         if localMapper == null then problem0
-        else TransformingReporter.transformProblem(problem0, localMapper)
+        else TransformingReporter.transformProblem(color, problem0, localMapper)
       }
       super.log(problem)
     }
@@ -821,6 +822,7 @@ object ZincWorkerImpl {
 
     /** implements a transformation that returns the same object if the mapper has no effect. */
     private def transformProblem(
+        color: Boolean,
         problem0: xsbti.Problem,
         mapper: xsbti.Position => xsbti.Position
     ): xsbti.Problem = {
@@ -834,7 +836,7 @@ object ZincWorkerImpl {
       if posIsNew || (related ne related0) || (actions ne actions0) then
         val rendered = {
           // if we transformed the position, then we must re-render the message
-          if posIsNew then Some(dottyStyleMessage(problem0, pos))
+          if posIsNew then Some(dottyStyleMessage(color, problem0, pos))
           else InterfaceUtil.jo2o(problem0.rendered())
         }
         InterfaceUtil.problem(
@@ -859,8 +861,22 @@ object ZincWorkerImpl {
     }
 
     /** Render the message in the style of dotty */
-    private def dottyStyleMessage(problem0: xsbti.Problem, pos: xsbti.Position): String = {
-      val base = problem0.message().trim
+    private def dottyStyleMessage(
+        color: Boolean,
+        problem0: xsbti.Problem,
+        pos: xsbti.Position
+    ): String = {
+      val base = problem0.message()
+      val severity = problem0.severity()
+
+      def shade(msg: String) =
+        if color then
+          severity match {
+            case xsbti.Severity.Error => Console.RED + msg + Console.RESET
+            case xsbti.Severity.Warn => Console.YELLOW + msg + Console.RESET
+            case xsbti.Severity.Info => Console.BLUE + msg + Console.RESET
+          }
+        else msg
 
       val normCode = {
         problem0.diagnosticCode().filter(_.code() != "-1").map({ inner =>
@@ -881,7 +897,7 @@ object ZincWorkerImpl {
       }
 
       val normHeader = optPath.map(path =>
-        s"-- $normCode$path\n"
+        s"${shade(s"-- $normCode$path")}\n"
       ).getOrElse("")
 
       val optSnippet = {
@@ -890,9 +906,10 @@ object ZincWorkerImpl {
         val pointer = intValue(pos.pointer(), -99)
         val endCol = intValue(pos.endColumn(), pointer + 1)
         if snip.nonEmpty && space.nonEmpty && pointer >= 0 && endCol >= 0 then
+          val arrowCount = math.max(1, math.min(endCol - pointer, snip.length - space.length))
           Some(
             s"""$snip
-               |$space${"^" * math.min(endCol - pointer, snip.length - space.length)}""".stripMargin
+               |$space${"^" * arrowCount}""".stripMargin
           )
         else
           None
@@ -912,7 +929,7 @@ object ZincWorkerImpl {
             val pre = snippetLine.toString
             val rest0 = " " * pre.length
             val rest = pre +: Vector.fill(lines.size - 1)(rest0)
-            rest.lazyZip(lines).map((pre, line) => s"$pre │ $line").mkString
+            rest.lazyZip(lines).map((pre, line) => shade(s"$pre │") + line).mkString
           } else {
             initial
           }
