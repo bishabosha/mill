@@ -254,7 +254,7 @@ object CodeGen {
          |  }""".stripMargin
     else
       """@_root_.scala.annotation.nowarn
-      |  override lazy val millDiscover: _root_.mill.define.Discover = _root_.mill.define.Discover[this.type]""".stripMargin
+        |  override lazy val millDiscover: _root_.mill.define.Discover = _root_.mill.define.Discover[this.type]""".stripMargin
   }
 
   def topBuildPrelude(

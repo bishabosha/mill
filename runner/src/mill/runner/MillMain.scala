@@ -240,48 +240,46 @@ object MillMain {
                         evaluate = (prevState: Option[RunnerState]) => {
                           adjustJvmProperties(userSpecifiedProperties, initialSystemProperties)
 
-                            new MillBuildBootstrap(
-                              projectRoot = WorkspaceRoot.workspaceRoot,
-                              output = os.Path(OutFiles.out, WorkspaceRoot.workspaceRoot),
-                              home = config.home,
-                              keepGoing = config.keepGoing.value,
-                              imports = config.imports,
-                              env = env,
-                              threadCount = threadCount,
-                              targetsAndParams = targetsAndParams,
-                              prevRunnerState = prevState.getOrElse(stateCache),
-                              logger = logger,
-                              disableCallgraph = config.disableCallgraph.value,
-                              needBuildSc = needBuildSc(config),
-                              requestedMetaLevel = config.metaLevel,
-                              config.allowPositional.value,
-                              systemExit = systemExit,
-                              scalaCompilerWorker
-                            ).evaluate()
-                          }
-                        )
-                        bspContext.foreach { ctx =>
-                          repeatForBsp =
-                            BspContext.bspServerHandle.lastResult == Some(
-
-                            BspServerResult.ReloadWorkspace
-
-                          )
-                          logger.error(
-                            s"`$bspCmd` returned with ${BspContext.bspServerHandle.lastResult}"
-                          )
+                          new MillBuildBootstrap(
+                            projectRoot = WorkspaceRoot.workspaceRoot,
+                            output = os.Path(OutFiles.out, WorkspaceRoot.workspaceRoot),
+                            home = config.home,
+                            keepGoing = config.keepGoing.value,
+                            imports = config.imports,
+                            env = env,
+                            threadCount = threadCount,
+                            targetsAndParams = targetsAndParams,
+                            prevRunnerState = prevState.getOrElse(stateCache),
+                            logger = logger,
+                            disableCallgraph = config.disableCallgraph.value,
+                            needBuildSc = needBuildSc(config),
+                            requestedMetaLevel = config.metaLevel,
+                            config.allowPositional.value,
+                            systemExit = systemExit,
+                            scalaCompilerWorker
+                          ).evaluate()
                         }
-                        loopRes = (isSuccess, evalStateOpt)
-                      } // while repeatForBsp
+                      )
                       bspContext.foreach { ctx =>
+                        repeatForBsp =
+                          BspContext.bspServerHandle.lastResult == Some(
+                            BspServerResult.ReloadWorkspace
+                          )
                         logger.error(
-                          s"Exiting BSP runner loop. Stopping BSP server. Last result: ${BspContext.bspServerHandle.lastResult}"
+                          s"`$bspCmd` returned with ${BspContext.bspServerHandle.lastResult}"
                         )
-                        BspContext.bspServerHandle.stop()
                       }
+                      loopRes = (isSuccess, evalStateOpt)
+                    } // while repeatForBsp
+                    bspContext.foreach { ctx =>
+                      logger.error(
+                        s"Exiting BSP runner loop. Stopping BSP server. Last result: ${BspContext.bspServerHandle.lastResult}"
+                      )
+                      BspContext.bspServerHandle.stop()
+                    }
 
-                      // return with evaluation result
-                      loopRes
+                    // return with evaluation result
+                    loopRes
                   }
                 }
               }
