@@ -18,7 +18,10 @@ import mill.scalalib.bsp.{
 }
 import mill.scalalib.dependency.versions.{ValidVersion, Version}
 
+// this import requires scala-reflect library to be on the classpath
+// it was duplicated to scala3-compiler, but is that too powerful to add as a dependency?
 import scala.reflect.internal.util.ScalaClassLoader
+
 import scala.util.Using
 
 /**
