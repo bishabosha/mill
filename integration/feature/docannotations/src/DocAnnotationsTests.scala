@@ -93,7 +93,7 @@ object DocAnnotationsTests extends UtestIntegrationTestSuite {
 
       assert(
         globMatches(
-          """core.ivyDepsTree(JavaModule.scala:896)
+          """core.ivyDepsTree(JavaModule.scala:...)
             |    Command to print the transitive dependency tree to STDOUT.
             |
             |    --inverse                Invert the tree representation, so that the root is on the bottom val
@@ -152,7 +152,7 @@ object DocAnnotationsTests extends UtestIntegrationTestSuite {
           """core(build.mill:...)
             |    The Core Module Docz!
             |
-            |Inherited Modules: JavaModule
+            |Inherited Modules: ...JavaModule...
             |
             |Default Task: core.run
             |
@@ -168,7 +168,7 @@ object DocAnnotationsTests extends UtestIntegrationTestSuite {
         globMatches(
           """MyJavaTaskModule(build.mill:...)
             |
-            |Inherited Modules: JavaModule
+            |Inherited Modules: ...JavaModule...
             |
             |Module Dependencies: core, core2
             |
