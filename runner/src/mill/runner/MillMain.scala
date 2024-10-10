@@ -282,10 +282,8 @@ object MillMain {
                     bspContext.foreach { ctx =>
                       repeatForBsp =
                         BspContext.bspServerHandle.lastResult == Some(
-
-                        BspServerResult.ReloadWorkspace
-
-                      )
+                          BspServerResult.ReloadWorkspace
+                        )
                       streams.err.println(
                         s"`$bspCmd` returned with ${BspContext.bspServerHandle.lastResult}"
                       )
