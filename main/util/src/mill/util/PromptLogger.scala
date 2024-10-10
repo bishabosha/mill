@@ -266,7 +266,7 @@ private[mill] object PromptLogger {
   ) {
     private var lastRenderedPromptHash = 0
 
-    private implicit def seqOrdering = new Ordering[Seq[String]] {
+    private implicit def seqOrdering: Ordering[Seq[String]] = new Ordering[Seq[String]] {
       def compare(xs: Seq[String], ys: Seq[String]): Int = {
         xs.lengthCompare(ys) match {
           case 0 =>
