@@ -7,3 +7,5 @@ object `package` extends MillBuildRootModule:
   def ivyDeps = Agg(
     ivy"org.scala-lang::toolkit:0.5.0"
   )
+
+  // def scalacOptions = Seq("-Yprint-tasty")

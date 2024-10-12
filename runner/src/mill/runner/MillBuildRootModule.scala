@@ -6,6 +6,7 @@ import mill.api.{PathRef, Result, internal}
 import mill.define.{Discover, Task}
 import mill.scalalib.{BoundDep, Dep, DepSyntax, Lib, ScalaModule}
 import mill.util.CoursierSupport
+import mill.util.Util.millProjectModule
 import mill.scalalib.api.Versions
 import mill.scalalib.api.ZincWorkerUtil
 import mill.main.client.OutFiles._
@@ -258,7 +259,7 @@ abstract class MillBuildRootModule()(implicit
   }
 
   override def unmanagedClasspath: T[Agg[PathRef]] = Task {
-    enclosingClasspath()
+    enclosingClasspath() ++ lineNumberPluginClasspath()
   }
 
   override def scalacPluginIvyDeps: T[Agg[Dep]] = Agg(
@@ -266,9 +267,16 @@ abstract class MillBuildRootModule()(implicit
   )
 
   override def scalacOptions: T[Seq[String]] = Task {
+    val lineNumbersResolved =
+      lineNumberPluginClasspath()
+        .map(_.path.toString)
+        .filter(str => str.matches("(.*)runner[\\/-]linenumbers(.*)") && !str.endsWith("classes"))
+
     super.scalacOptions() ++
       Seq(
-        "-deprecation"
+        "-Xplugin:" + lineNumbersResolved.mkString(","),
+        "-deprecation",
+        "-Xplugin-require:mill-linenumber-plugin"
       )
   }
 
@@ -279,8 +287,7 @@ abstract class MillBuildRootModule()(implicit
     super.semanticDbPluginClasspath() ++ lineNumberPluginClasspath()
 
   def lineNumberPluginClasspath: T[Agg[PathRef]] = Task {
-    // millProjectModule("mill-runner-linenumbers", repositoriesTask())
-    Agg.empty
+    millProjectModule("mill-runner-linenumbers", repositoriesTask())
   }
 
   /** Used in BSP IntelliJ, which can only work with directories */

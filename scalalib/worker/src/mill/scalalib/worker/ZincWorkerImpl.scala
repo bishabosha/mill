@@ -752,7 +752,8 @@ object ZincWorkerImpl {
         existsSplicedMarker && offset > splicedMarkerLen
 
       def inner(pos0: xsbti.Position): xsbti.Position = {
-        if userCode(pos0.startOffset()) || userCode(pos0.offset()) then {
+        val remapped = pos0.sourcePath().isPresent && pos0.sourcePath().get() == adjustedFile
+        if !remapped && (userCode(pos0.startOffset()) || userCode(pos0.offset())) then {
           val IArray(line, offset, startOffset, endOffset, startLine, endLine) =
             IArray(
               pos0.line(),
