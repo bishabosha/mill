@@ -4,9 +4,6 @@ import mill.{Task, Command, RootModule, Cross}, Task.Anon
 import $packages._
 import $file.foo.Box
 import $file.foo.{given Box[Int]}
-
-def inner: Int = ??? // not implemented
-
 object `package` extends RootModule:
 
   given Cross.ToSegments[DayValue](d => List(d.toString))
@@ -29,6 +26,7 @@ object `package` extends RootModule:
     println(s"Today is $myDay")
   end anyDay
 
+  def method: Int = inner
   trait DayModule extends Cross.Module[DayValue]:
     def myDay: DayValue = crossValue
 
@@ -38,7 +36,9 @@ object `package` extends RootModule:
   end DayModule
 
   def someTopLevelCommand(): Command[Unit] = Task.Command:
-    println(s"Hello, world! ${summon[Box[Int]]} $inner")
+    println(s"Hello, world! ${summon[Box[Int]]} $method")
   end someTopLevelCommand
+
+  def inner: Int = ??? // not implemented
 
 end `package`

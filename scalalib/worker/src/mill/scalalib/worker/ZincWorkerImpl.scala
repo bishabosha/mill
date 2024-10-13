@@ -760,14 +760,11 @@ object ZincWorkerImpl {
       def originalLineToOffset(line: Int): Int =
         original.take(line).map(_.length).sum
 
-      def lineToOffset(line: Int): Int =
-        lines.take(line).map(_.length).sum
-
       def offsetToLine(offset: Int): Int =
         lines
           .scanLeft(0)(_ + _.length)
           .zipWithIndex
-          .collectFirst { case (sum, idx) if sum > offset => idx - 1 }
+          .collectFirst { case (sum, idx) if sum > offset => idx }
           .getOrElse(lines.length - 1)
 
       def inner(pos0: xsbti.Position): xsbti.Position = {
@@ -817,59 +814,25 @@ object ZincWorkerImpl {
             )
               .map(intValue(_, 1) - 1)
 
-          val baseLine = offsetToLine(offset)
-
-          val initOffset = lineToOffset(baseLine)
-          val originalOffset = originalLineToOffset(baseLine)
-          val baseOffset = {
-            if initOffset > originalOffset then initOffset - originalOffset
-            else originalOffset - initOffset
-          } - 1
-
-          val lineDiff = {
-            if baseLine > line then baseLine - line
-            else line - baseLine
-          } - 1
-
-          val snippet = original(baseLine).stripLineEnd
-          val offset0 = offset - baseOffset
-          val endOffset0 = endOffset - baseOffset
-          val startOffset0 = startOffset - baseOffset
-
-          val pointer0 = offset0 - originalOffset
-          val pointerSpace0 = {
-            val result = new StringBuilder()
-            for i <- 0 until pointer0 do
-              result.append(if snippet.charAt(i) == '\t' then '\t' else ' ')
-            result.toString()
-          }
-
-          val startCol0 = {
-            val col0 = intValue(pos0.startColumn(), -1)
-            if col0 < 0 then None
-            else Some(Integer.valueOf(startOffset0 - originalOffset))
-          }
-
-          val endCol0 = {
-            val col0 = intValue(pos0.endColumn(), -1)
-            if col0 < 0 then None
-            else Some(Integer.valueOf(endOffset0 - originalOffset))
-          }
+          val baseLine = offsetToLine(offset) // offset is the start of the line in the generated code
+          val snippet = original(baseLine).stripLineEnd // project the line in the original code
+          val projectedOffset = originalLineToOffset(baseLine) // project line to offset in the original code
+          val prettyLine = baseLine + 1 // xsbti.Position is 1-based
 
           InterfaceUtil.position(
-            line0 = Some(line - lineDiff),
+            line0 = Some(prettyLine),
             content = snippet,
-            offset0 = Some(offset0),
-            pointer0 = Some(pointer0),
-            pointerSpace0 = Some(pointerSpace0),
+            offset0 = Some(projectedOffset),
+            pointer0 = Some(0),
+            pointerSpace0 = None, // if we set pointerSpace as None, then print carets for the whole line
             sourcePath0 = originPath,
             sourceFile0 = originFile,
-            startOffset0 = Some(startOffset0),
-            endOffset0 = Some(endOffset0),
-            startLine0 = Some(startLine - lineDiff),
-            startColumn0 = startCol0,
-            endLine0 = Some(endLine - lineDiff),
-            endColumn0 = endCol0
+            startOffset0 = Some(projectedOffset),
+            endOffset0 = Some(projectedOffset),
+            startLine0 = Some(prettyLine),
+            startColumn0 = None,
+            endLine0 = Some(prettyLine),
+            endColumn0 = None
           )
         } else {
           pos0
@@ -1010,8 +973,10 @@ object ZincWorkerImpl {
         val space = pos.pointerSpace().orElse("")
         val pointer = intValue(pos.pointer(), -99)
         val endCol = intValue(pos.endColumn(), pointer + 1)
-        if snip.nonEmpty && space.nonEmpty && pointer >= 0 && endCol >= 0 then
-          val arrowCount = math.max(1, math.min(endCol - pointer, snip.length - space.length))
+        if snip.nonEmpty && pointer >= 0 && endCol >= 0 then
+          val arrowCount =
+            if pos.pointerSpace().isEmpty() && pointer == 0 then snip.length // whole length
+            else math.max(1, math.min(endCol - pointer, snip.length - space.length))
           Some(
             s"""$snip
                |$space${"^" * arrowCount}""".stripMargin
