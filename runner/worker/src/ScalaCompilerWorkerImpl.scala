@@ -38,7 +38,32 @@ final class ScalaCompilerWorkerImpl extends ScalaCompilerWorkerApi { worker =>
     val source = SourceFile.virtual(fileName, rawCode)
     def mergeErrors(errors: List[String]): String =
       s"$fileName failed to parse:" + System.lineSeparator + errors.mkString(System.lineSeparator)
-    splitScriptSource(source).left.map(mergeErrors)
+    import scala.concurrent.ExecutionContext.Implicits.global
+    import scala.concurrent.duration.Duration
+    import scala.concurrent.Await
+    import scala.concurrent.Future
+
+    val howMany = (0 to 10_000)
+    val futs = howMany.map(_ => Future(try Right(splitScriptSource(source)) catch { case e: Throwable => Left(e) }))
+    val res = Future.sequence(futs).map(res =>
+      val (failures, successes) = res.partitionMap(identity)
+      if failures.nonEmpty then
+        Left(failures)
+      else
+        Right(successes)
+    )
+    val result = Await.result(res, Duration.Inf) match
+      case Left(thrownErrs) =>
+        sys.error(s"${thrownErrs.length} errors occurred while parsing the script.\nsample: ${thrownErrs.head}")
+        ???
+      case Right(oks) =>
+        val successes = oks.collect({ case Right(value) => value }).size
+        sys.error(s"${howMany.length} runs of splitScriptSource(source) didnt throw. $successes succeeded!")
+        oks.head.left.map(mergeErrors)
+
+
+    // splitScriptSource(source).left.map(mergeErrors)
+    result
   }
 
   def splitScriptSource(
@@ -99,22 +124,23 @@ final class ScalaCompilerWorkerImpl extends ScalaCompilerWorkerApi { worker =>
       finalStat: Option[(String, Snippet)]
   ) extends ObjectData
 
+  private trait Lock extends java.util.concurrent.locks.ReentrantLock {
+    /** Synchronize the operation `op` */
+    inline def sync[T](inline op: T): T = {
+      try {
+        lock()
+        op
+      } finally {
+        unlock()
+      }
+    }
+  }
+
   /** MillParsers contains the code for parsing objects and imports from text. */
   private object MillParsers {
 
     /** Dotty parsers need to be synchronized */
-    private object ParseLock extends java.util.concurrent.locks.ReentrantLock {
-
-      /** Synchronize the operation `op` */
-      inline def sync[T](inline op: T): T = {
-        try {
-          lock()
-          op
-        } finally {
-          unlock()
-        }
-      }
-    }
+    private object ParseLock extends Lock
 
     trait MillParserCommon extends Parsers.Parser {
       override def atSpan[T <: Positioned](span: Span)(t: T): T = {
@@ -482,6 +508,11 @@ final class ScalaCompilerWorkerImpl extends ScalaCompilerWorkerApi { worker =>
 
   /** The MillDriver contains code for initializing a Context and reporting errors. */
   private object MillDriver extends Driver {
+
+    /** Dotty context setup need to be synchronized */
+    // private object CtxLock extends Lock
+
+    override val initCtx: Context = super.initCtx
 
     def renderErrors()(using Context): List[String] = {
       val errs = ctx.reporter.removeBufferedMessages.collect {

@@ -1,9 +1,9 @@
 package build
-import $meta._
+// import $meta._
 import mill.{Task, Command, RootModule, Cross}, Task.Anon
-import $packages._
-import $file.foo.Box
-import $file.foo.{given Box[Int]}
+// import $packages._
+// import $file.foo.Box
+// import $file.foo.{given Box[Int]}
 
 object `package` extends RootModule:
 
