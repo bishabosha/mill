@@ -5,11 +5,9 @@ import $packages._
 import $file.foo.Box
 import $file.foo.{given Box[Int]}
 
+def inner: Int = ??? // not implemented
+
 object `package` extends RootModule:
-  def someTopLevelCommand(): Command[Unit] = Task.Command:
-    ??? // not implemented
-    println(s"Hello, world! ${summon[Box[Int]]}")
-  end someTopLevelCommand
 
   given Cross.ToSegments[DayValue](d => List(d.toString))
 
@@ -38,5 +36,9 @@ object `package` extends RootModule:
       println(s"Today is $myDay")
     end day
   end DayModule
+
+  def someTopLevelCommand(): Command[Unit] = Task.Command:
+    println(s"Hello, world! ${summon[Box[Int]]} $inner")
+  end someTopLevelCommand
 
 end `package`

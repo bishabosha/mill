@@ -43,6 +43,7 @@ import xsbti.{PathBasedFile, VirtualFile}
 
 import java.io.{File, PrintWriter}
 import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
 import java.util.Optional
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -720,16 +721,21 @@ object ZincWorkerImpl {
               .collectFirst { case s"//MILL_ORIGINAL_FILE_PATH=$rest" => rest.trim }
               .getOrElse(sys.error(vf.id()))
 
-            vf.id() -> remap(lines, adjustedFile)
+            val original = Files.readString(Paths.get(adjustedFile), StandardCharsets.UTF_8)
+              .linesWithSeparators.toVector
+
+            val remapFn = remap(lines, adjustedFile, original)
+            Seq(vf.id() -> remapFn, adjustedFile -> remapFn)
         })
       }
 
-      if buildSources0.nonEmpty then lookup(buildSources0.toMap) else null
+      if buildSources0.nonEmpty then lookup(buildSources0.flatten.toMap) else null
     }
 
     private def remap(
         lines: Vector[String],
-        adjustedFile: String
+        adjustedFile: String,
+        original: Vector[String]
     ): xsbti.Position => xsbti.Position = {
       val markerLine = lines.indexWhere(_.startsWith(userCodeStartMarker))
       val splicedMarkerStartLine = lines.indexWhere(_.startsWith(splicedCodeStartMarker))
@@ -751,8 +757,21 @@ object ZincWorkerImpl {
       def postSplice(offset: Int): Boolean =
         existsSplicedMarker && offset > splicedMarkerLen
 
+      def originalLineToOffset(line: Int): Int =
+        original.take(line).map(_.length).sum
+
+      def lineToOffset(line: Int): Int =
+        lines.take(line).map(_.length).sum
+
+      def offsetToLine(offset: Int): Int =
+        lines
+          .scanLeft(0)(_ + _.length)
+          .zipWithIndex
+          .collectFirst { case (sum, idx) if sum > offset => idx - 1 }
+          .getOrElse(lines.length - 1)
+
       def inner(pos0: xsbti.Position): xsbti.Position = {
-        val remapped = pos0.sourcePath().isPresent && pos0.sourcePath().get() == adjustedFile
+        val remapped = pos0.sourcePath().get() == adjustedFile
         if !remapped && (userCode(pos0.startOffset()) || userCode(pos0.offset())) then {
           val IArray(line, offset, startOffset, endOffset, startLine, endLine) =
             IArray(
@@ -785,6 +804,72 @@ object ZincWorkerImpl {
             startColumn0 = InterfaceUtil.jo2o(pos0.startColumn()),
             endLine0 = Some(endLine - baseLine),
             endColumn0 = InterfaceUtil.jo2o(pos0.endColumn())
+          )
+        } else if remapped then {
+          val IArray(line, offset, startOffset, endOffset, startLine, endLine) =
+            IArray(
+              pos0.line(),
+              pos0.offset(),
+              pos0.startOffset(),
+              pos0.endOffset(),
+              pos0.startLine(),
+              pos0.endLine()
+            )
+              .map(intValue(_, 1) - 1)
+
+          val baseLine = offsetToLine(offset)
+
+          val initOffset = lineToOffset(baseLine)
+          val originalOffset = originalLineToOffset(baseLine)
+          val baseOffset = {
+            if initOffset > originalOffset then initOffset - originalOffset
+            else originalOffset - initOffset
+          } - 1
+
+          val lineDiff = {
+            if baseLine > line then baseLine - line
+            else line - baseLine
+          } - 1
+
+          val snippet = original(baseLine).stripLineEnd
+          val offset0 = offset - baseOffset
+          val endOffset0 = endOffset - baseOffset
+          val startOffset0 = startOffset - baseOffset
+
+          val pointer0 = offset0 - originalOffset
+          val pointerSpace0 = {
+            val result = new StringBuilder()
+            for i <- 0 until pointer0 do
+              result.append(if snippet.charAt(i) == '\t' then '\t' else ' ')
+            result.toString()
+          }
+
+          val startCol0 = {
+            val col0 = intValue(pos0.startColumn(), -1)
+            if col0 < 0 then None
+            else Some(Integer.valueOf(startOffset0 - originalOffset))
+          }
+
+          val endCol0 = {
+            val col0 = intValue(pos0.endColumn(), -1)
+            if col0 < 0 then None
+            else Some(Integer.valueOf(endOffset0 - originalOffset))
+          }
+
+          InterfaceUtil.position(
+            line0 = Some(line - lineDiff),
+            content = snippet,
+            offset0 = Some(offset0),
+            pointer0 = Some(pointer0),
+            pointerSpace0 = Some(pointerSpace0),
+            sourcePath0 = originPath,
+            sourceFile0 = originFile,
+            startOffset0 = Some(startOffset0),
+            endOffset0 = Some(endOffset0),
+            startLine0 = Some(startLine - lineDiff),
+            startColumn0 = startCol0,
+            endLine0 = Some(endLine - lineDiff),
+            endColumn0 = endCol0
           )
         } else {
           pos0

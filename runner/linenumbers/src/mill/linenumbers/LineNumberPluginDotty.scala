@@ -22,7 +22,8 @@ import dotty.tools.dotc.core.Decorators.i
 class LineNumberPluginDotty extends StandardPlugin {
 
   override def name: String = "mill-linenumber-plugin"
-  override def description: String = "Adjusts line numbers in the user-provided script to compensate for wrapping"
+  override def description: String =
+    "Adjusts line numbers in the user-provided script to compensate for wrapping"
 
   override def initialize(options: List[String])(using Context): List[PluginPhase] =
     val units = ctx.run match
@@ -34,7 +35,9 @@ class LineNumberPluginDotty extends StandardPlugin {
     val buildFiles = units.view
       .map(_.source)
       .filter(src =>
-        src.file != NoAbstractFile && buildFileExtensions.exists(ext => src.file.path.endsWith(s".$ext"))
+        src.file != NoAbstractFile && buildFileExtensions.exists(ext =>
+          src.file.path.endsWith(s".$ext")
+        )
       )
       .map { src =>
         val str = new String(src.content)
@@ -61,8 +64,8 @@ class FixLineNumbers(buildFiles: Map[SourceFile, (String, Vector[String])]) exte
 
   override def phaseName: String = "FixLineNumbers"
 
-  override def runsAfter: Set[String] = Set("posttyper")
-  override def runsBefore: Set[String] = Set("pickler")
+  override def runsAfter: Set[String] = Set("moveStatic")
+  override def runsBefore: Set[String] = Set("genBCode")
 
   override def transformUnit(tree: tpd.Tree)(using Context): tpd.Tree = {
     val unit = ctx.compilationUnit
@@ -80,13 +83,18 @@ class FixLineNumbers(buildFiles: Map[SourceFile, (String, Vector[String])]) exte
       val tree0 = super.transform(tree)
       val pos = tree0.sourcePos
       if pos.exists && tree0.show.toString() == "???" then
-        report.echo(i"Adjusted tree is now [${tree0.sourcePos},${tree0.sourcePos.span}]", tree0.sourcePos)
+        report.echo(
+          i"Adjusted tree is now [${tree0.sourcePos},${tree0.sourcePos.span}]",
+          tree0.sourcePos
+        )
       tree0
     }
   }
 
-  class PositionTransformer(adjustedFile: String, lines: Vector[String]) extends tpd.TreeMapWithPreciseStatContexts {
-    val adjustedSource = SourceFile(dotty.tools.io.PlainFile(dotty.tools.io.Path(adjustedFile)), scala.io.Codec.UTF8)
+  class PositionTransformer(adjustedFile: String, lines: Vector[String])
+      extends tpd.TreeMapWithPreciseStatContexts {
+    val adjustedSource =
+      SourceFile(dotty.tools.io.PlainFile(dotty.tools.io.Path(adjustedFile)), scala.io.Codec.UTF8)
 
     val markerLine = lines.indexWhere(_.startsWith(userCodeStartMarker))
     val splicedMarkerStartLine = lines.indexWhere(_.startsWith(splicedCodeStartMarker))
@@ -105,11 +113,16 @@ class FixLineNumbers(buildFiles: Map[SourceFile, (String, Vector[String])]) exte
       existsSplicedMarker && offset > splicedMarkerLen
 
     override def transform(tree: tpd.Tree)(using Context): tpd.Tree = {
-      val tree0 = super.transform(tree)
-      val pos = tree0.sourcePos
+      val tree0 = {
+        val candidate = super.transform(tree)
+        if candidate.sourcePos.exists && candidate.sourcePos.source != adjustedSource then
+          candidate.cloneIn(adjustedSource)
+        else
+          candidate
+      }
+      val pos = tree.sourcePos
 
-      if pos.exists && pos.source.file.path != adjustedFile && userCode(pos.start) then
-        // report.echo(i"Visit tree ${tree.show} [${tree.span}]", tree0.sourcePos)
+      if pos.exists && userCode(pos.start) then
         val startOffset = pos.start
 
         val baseOffset =
@@ -118,33 +131,27 @@ class FixLineNumbers(buildFiles: Map[SourceFile, (String, Vector[String])]) exte
           else
             topWrapperLen
 
-        /** We have to account for any munging of magic imports, and rewrite of object to abstract class etc,
-         * so we need to calculate the difference
-         * if offset of lines in the original file and the adjusted file
-         */
-        val removedChars = {
-          val startOfLine = pos.source.startOfLine(startOffset)
+        // Dotty hard codes line numbers in classfiles to be from the offset of the line
+        // in the current compilation unit
 
-          val offsetLine = pos.source.offsetToLine(baseOffset)
-          val startLine = pos.source.offsetToLine(startOffset)
-          val expectedLineInOriginal = startLine - offsetLine
+        // so we need to compute the offset that will bring Foo: line 3 in the user code
+        // (but line 12 in the adjusted code), to whatever is on line 3 in the adjusted code
+        // so any reported errors will be totally mangled, unless reverse engineered!
+        // but the classfile offsets will be correct.
+        val startLine = pos.source.offsetToLine(startOffset)
+        val normLine = startLine - pos.source.offsetToLine(baseOffset)
 
-          adjustedSource.lineToOffsetOpt(expectedLineInOriginal) match
-            case Some(startOfLineInOriginal) =>
-              val startOfLineNorm = startOfLine - baseOffset
-              if startOfLineInOriginal > startOfLineNorm then
-                startOfLineInOriginal - startOfLineNorm
-              else
-                startOfLineNorm - startOfLineInOriginal
-            case None =>
-              return tree0 // for some reason its beyond the end of the file, likely generated code so don't adjust
-        }
+        val startOfLine = pos.source.lineToOffset(startLine)
+        val newLineStart = pos.source.lineToOffset(normLine)
+        val diff = startOfLine - newLineStart
 
-        val diff = baseOffset - removedChars
         val span0 = pos.span.shift(-diff)
-        val tree1 = tree0.cloneIn(adjustedSource).withSpan(span0)
+        val tree1 = tree0.withSpan(span0)
         if tree1.show.toString() == "???" then
-          report.echo(i"Adjusted tree [${tree0.sourcePos}] to ${tree1.sourcePos}", tree1.sourcePos)
+          report.echo(
+            i"moved position to [${tree1.sourcePos.source},${tree1.sourcePos.span}](${pos.source}%${span0.start}L${pos.source.offsetToLine(span0.point) + 1})",
+            tree1.sourcePos
+          )
         tree1
       else
         tree0
