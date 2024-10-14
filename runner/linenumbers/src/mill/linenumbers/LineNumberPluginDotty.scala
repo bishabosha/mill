@@ -130,29 +130,27 @@ class FixLineNumbers(buildFiles: Map[SourceFile, (String, Vector[String])]) exte
 
       if pos.exists && userCode(pos.start) then
         val startOffset0 = pos.start
-        val pointOffset = pos.point
 
-        val baseOffset =
+        val (baseLine, baseOffset) =
           if postSplice(startOffset0) then
             return tree0 // skip post spliced code for now (generated, so don't adjust)
           else
-            topWrapperLen
+            (markerLine + 1, topWrapperLen)
 
-        // Dotty hard codes line numbers in classfiles to be from the offset of the line
-        // in the current compilation unit
-        //
-        // so we need to compute the offset that will bring Foo: line 3 in the user code
-        // (but line 12 in the adjusted code), to the start of line 3 in the generated code.
-        // we can't preserve column information, e.g. line 3 in generated code could be empty,
-        // so collapse the whole position to the start of the line.
-        //
-        // In ZincWorkerImpl, we can compute the line of the offset, and then lookup a snippet
-        // of that line in the original source file for pretty printing.
-        val pointLine = pos.source.offsetToLine(pointOffset)
-        val normLine = pointLine - pos.source.offsetToLine(baseOffset)
-        val newLineStart = pos.source.lineToOffset(normLine)
+        val startLineOffset = pos.source.lineToOffset(pos.line)
+        val normStartOffset = startLineOffset - baseOffset
+        val normLine = pos.line - baseLine
+        val adjustedStartOffset = adjustedSource.lineToOffset(normLine)
+        val droppedChars = {
+          // account for any rewritten code above the current line
+          if adjustedStartOffset > normStartOffset then
+            adjustedStartOffset - normStartOffset
+          else
+            normStartOffset - adjustedStartOffset
+        }
 
-        val span0 = Spans.Span(start = newLineStart) // collapse to the start of the line
+        val span0 = pos.span.shift(-(baseOffset - droppedChars))
+
         val tree1 = tree0.cloneIn(adjustedSource).withSpan(span0)
         if tree1.show.toString() == "???" then
           def clsLineOf(pos: SourcePosition, source: Option[SourceFile] = None): Int =
@@ -160,7 +158,8 @@ class FixLineNumbers(buildFiles: Map[SourceFile, (String, Vector[String])]) exte
           def showPos(pos: SourcePosition): String =
             s"${pos.source}${pos.span}"
           report.echo(
-            i"moved position\npointLine: ${pointLine + 1}, normLine: ${normLine + 1}\nto: ${showPos(tree1.sourcePos)}(L${clsLineOf(tree1.sourcePos, Some(pos.source))})\nfrom: ${showPos(tree0.sourcePos)}(L${clsLineOf(tree0.sourcePos)})",
+            // i"moved position\npointLine: ${pointLine + 1}, normLine: ${normLine + 1}\nto: ${showPos(tree1.sourcePos)}(L${clsLineOf(tree1.sourcePos, Some(pos.source))})\nfrom: ${showPos(tree0.sourcePos)}(L${clsLineOf(tree0.sourcePos)})",
+            i"moved position shift: ${baseOffset}\nto: ${showPos(tree1.sourcePos)}(L${clsLineOf(tree1.sourcePos)})\nfrom: ${showPos(tree0.sourcePos)}(L${clsLineOf(tree0.sourcePos)})",
             tree1.sourcePos
           )
         tree1

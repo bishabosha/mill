@@ -721,11 +721,11 @@ object ZincWorkerImpl {
               .collectFirst { case s"//MILL_ORIGINAL_FILE_PATH=$rest" => rest.trim }
               .getOrElse(sys.error(vf.id()))
 
-            val original = Files.readString(Paths.get(adjustedFile), StandardCharsets.UTF_8)
-              .linesWithSeparators.toVector
+            // val original = Files.readString(Paths.get(adjustedFile), StandardCharsets.UTF_8)
+            //   .linesWithSeparators.toVector
 
-            val remapFn = remap(lines, adjustedFile, original)
-            Seq(vf.id() -> remapFn, adjustedFile -> remapFn)
+            val remapFn = remap(lines, adjustedFile/*, original*/)
+            Seq(vf.id() -> remapFn/*, adjustedFile -> remapFn*/)
         })
       }
 
@@ -735,7 +735,7 @@ object ZincWorkerImpl {
     private def remap(
         lines: Vector[String],
         adjustedFile: String,
-        original: Vector[String]
+        // original: Vector[String]
     ): xsbti.Position => xsbti.Position = {
       val markerLine = lines.indexWhere(_.startsWith(userCodeStartMarker))
       val splicedMarkerStartLine = lines.indexWhere(_.startsWith(splicedCodeStartMarker))
@@ -757,15 +757,15 @@ object ZincWorkerImpl {
       def postSplice(offset: Int): Boolean =
         existsSplicedMarker && offset > splicedMarkerLen
 
-      def originalLineToOffset(line: Int): Int =
-        original.take(line).map(_.length).sum
+      // def originalLineToOffset(line: Int): Int =
+      //   original.take(line).map(_.length).sum
 
-      def offsetToLine(offset: Int): Int =
-        lines
-          .scanLeft(0)(_ + _.length)
-          .zipWithIndex
-          .collectFirst { case (sum, idx) if sum > offset => idx }
-          .getOrElse(lines.length - 1)
+      // def offsetToLine(offset: Int): Int =
+      //   lines
+      //     .scanLeft(0)(_ + _.length)
+      //     .zipWithIndex
+      //     .collectFirst { case (sum, idx) if sum > offset => idx }
+      //     .getOrElse(lines.length - 1)
 
       def inner(pos0: xsbti.Position): xsbti.Position = {
         val remapped = pos0.sourcePath().get() == adjustedFile
@@ -802,38 +802,38 @@ object ZincWorkerImpl {
             endLine0 = Some(endLine - baseLine),
             endColumn0 = InterfaceUtil.jo2o(pos0.endColumn())
           )
-        } else if remapped then {
-          val IArray(line, offset, startOffset, endOffset, startLine, endLine) =
-            IArray(
-              pos0.line(),
-              pos0.offset(),
-              pos0.startOffset(),
-              pos0.endOffset(),
-              pos0.startLine(),
-              pos0.endLine()
-            )
-              .map(intValue(_, 1) - 1)
+        // } else if remapped then {
+        //   val IArray(line, offset, startOffset, endOffset, startLine, endLine) =
+        //     IArray(
+        //       pos0.line(),
+        //       pos0.offset(),
+        //       pos0.startOffset(),
+        //       pos0.endOffset(),
+        //       pos0.startLine(),
+        //       pos0.endLine()
+        //     )
+        //       .map(intValue(_, 1) - 1)
 
-          val baseLine = offsetToLine(offset) // offset is the start of the line in the generated code
-          val snippet = original(baseLine).stripLineEnd // project the line in the original code
-          val projectedOffset = originalLineToOffset(baseLine) // project line to offset in the original code
-          val prettyLine = baseLine + 1 // xsbti.Position is 1-based
+        //   val baseLine = offsetToLine(offset) // offset is the start of the line in the generated code
+        //   val snippet = original(baseLine).stripLineEnd // project the line in the original code
+        //   val projectedOffset = originalLineToOffset(baseLine) // project line to offset in the original code
+        //   val prettyLine = baseLine + 1 // xsbti.Position is 1-based
 
-          InterfaceUtil.position(
-            line0 = Some(prettyLine),
-            content = snippet,
-            offset0 = Some(projectedOffset),
-            pointer0 = Some(0),
-            pointerSpace0 = None, // if we set pointerSpace as None, then print carets for the whole line
-            sourcePath0 = originPath,
-            sourceFile0 = originFile,
-            startOffset0 = Some(projectedOffset),
-            endOffset0 = Some(projectedOffset),
-            startLine0 = Some(prettyLine),
-            startColumn0 = None,
-            endLine0 = Some(prettyLine),
-            endColumn0 = None
-          )
+        //   InterfaceUtil.position(
+        //     line0 = Some(prettyLine),
+        //     content = snippet,
+        //     offset0 = Some(projectedOffset),
+        //     pointer0 = Some(0),
+        //     pointerSpace0 = None, // if we set pointerSpace as None, then print carets for the whole line
+        //     sourcePath0 = originPath,
+        //     sourceFile0 = originFile,
+        //     startOffset0 = Some(projectedOffset),
+        //     endOffset0 = Some(projectedOffset),
+        //     startLine0 = Some(prettyLine),
+        //     startColumn0 = None,
+        //     endLine0 = Some(prettyLine),
+        //     endColumn0 = None
+        //   )
         } else {
           pos0
         }

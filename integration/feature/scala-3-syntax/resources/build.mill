@@ -22,6 +22,8 @@ object `package` extends RootModule:
 
   object day extends Cross[DayModule](DayValue.values.toSeq)
 
+  def inner: Int = ??? // not implemented
+
   def anyDay(myDay: DayValue): Command[Unit] = Task.Command:
     println(s"Today is $myDay")
   end anyDay
@@ -38,7 +40,5 @@ object `package` extends RootModule:
   def someTopLevelCommand(): Command[Unit] = Task.Command:
     println(s"Hello, world! ${summon[Box[Int]]} $method")
   end someTopLevelCommand
-
-  def inner: Int = ??? // not implemented
 
 end `package`
