@@ -105,6 +105,8 @@ object Cross {
    */
   class ToSegments[-T](val convert: T => List[String])
   object ToSegments {
+    import scala.deriving.Mirror
+
     implicit object StringToPathSegment extends ToSegments[String](List(_))
     implicit object CharToPathSegment extends ToSegments[Char](v => List(v.toString))
     implicit object LongToPathSegment extends ToSegments[Long](v => List(v.toString))
@@ -118,6 +120,32 @@ object Cross {
     )
     implicit def ListToPathSegment[T: ToSegments]: ToSegments[List[T]] = new ToSegments[List[T]](
       _.flatMap(implicitly[ToSegments[T]].convert).toList
+    )
+
+
+    private transparent inline def enumSize[Ts <: Tuple]: Unit =
+      reduce[Ts]
+    private transparent inline def reduce[Ts <: Tuple]: Unit =
+      inline compiletime.erasedValue[Ts] match
+        case _: (elem *: elems1) => inline elemSize[elem] match
+          case _ => reduce[elems1]
+        case _: EmptyTuple => ()
+        case _ => compiletime.error("Could not examine cases of enum, make sure the type is declared explicitly")
+    private transparent inline def elemSize[T]: Unit =
+      compiletime.summonFrom {
+        case m: Mirror.ProductOf[T] => validate[m.type]
+      }
+    private transparent inline def validate[T]: Unit =
+      inline compiletime.erasedValue[T] match
+        case _: Mirror.Singleton => ()
+        case _ => compiletime.error("enum contains non-singleton cases")
+
+    opaque type AllSingleton[T] = Any
+    transparent inline given SumAllSingleton[T](using m: Mirror.SumOf[T]): AllSingleton[T] =
+      enumSize[m.MirroredElemTypes]: Any
+
+    implicit def EnumValuesToPathSegment[T <: reflect.Enum: AllSingleton]: ToSegments[T] = new ToSegments[T](
+      v => List(v.productPrefix)
     )
   }
 
